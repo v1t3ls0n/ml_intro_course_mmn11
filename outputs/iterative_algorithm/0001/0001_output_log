@@ -1,0 +1,43 @@
+Training binary classifier for digit 0...
+Training binary classifier for digit 1...
+Training binary classifier for digit 2...
+Training binary classifier for digit 3...
+Training binary classifier for digit 4...
+Training binary classifier for digit 5...
+Training binary classifier for digit 6...
+Training binary classifier for digit 7...
+Training binary classifier for digit 8...
+Training binary classifier for digit 9...
+Prebuilt Confusion Matrix:
+ [[ 947    1    4    2    2    0   12    4    6    2]
+ [   1 1093    5    4    0    1    5    4   21    1]
+ [  14   11  888   13   17    5   17   16   47    4]
+ [   4    4   24  876    2   43    4   15   28   10]
+ [   3    3    2   10  858    7    9    3   11   76]
+ [  15    5    3   70   33  664   14   12   59   17]
+ [  17    5   15    2   12   25  873    6    3    0]
+ [   1   11   34   14    7   13    0  908    4   36]
+ [  23   18    7   39   26   55   15   18  749   24]
+ [  12    3    2   51   71   30    1   75   18  746]]
+Custom Confusion Matrix:
+ [[ 947    1    4    2    2    0   12    4    6    2]
+ [   1 1093    5    4    0    1    5    4   21    1]
+ [  14   11  888   13   17    5   17   16   47    4]
+ [   4    4   24  876    2   43    4   15   28   10]
+ [   3    3    2   10  858    7    9    3   11   76]
+ [  15    5    3   70   33  664   14   12   59   17]
+ [  17    5   15    2   12   25  873    6    3    0]
+ [   1   11   34   14    7   13    0  908    4   36]
+ [  23   18    7   39   26   55   15   18  749   24]
+ [  12    3    2   51   71   30    1   75   18  746]]
+Overall Accuracy: 86.02%
+Sensitivity for digit 0: 0.97
+Sensitivity for digit 1: 0.96
+Sensitivity for digit 2: 0.86
+Sensitivity for digit 3: 0.87
+Sensitivity for digit 4: 0.87
+Sensitivity for digit 5: 0.74
+Sensitivity for digit 6: 0.91
+Sensitivity for digit 7: 0.88
+Sensitivity for digit 8: 0.77
+Sensitivity for digit 9: 0.74
