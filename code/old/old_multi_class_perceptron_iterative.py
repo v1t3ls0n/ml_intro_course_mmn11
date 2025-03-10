@@ -1,5 +1,5 @@
 # Multi-Class Perceptron with Pocket Algorithm
-from imports import np
+from code.old.imports import np
 class MultiClassPerceptron:
     def __init__(self, num_classes=10, learning_rate=0.01, max_iter=1000):
         """

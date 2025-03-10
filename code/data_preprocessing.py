@@ -1,5 +1,6 @@
 # Data Loading and Preprocessing Functions
-from imports import np, fetch_openml
+import numpy as np
+from sklearn.datasets import fetch_openml
 
 def load_mnist():
     """

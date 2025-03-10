@@ -1,5 +1,8 @@
 # Evaluation Functions
-from imports import confusion_matrix,plt,np
+# Imports and setup
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.metrics import confusion_matrix
 from custom_confusion_matrix import custom_confusion_matrix
 def evaluate_model(model, X, y):
     """
@@ -13,12 +16,16 @@ def evaluate_model(model, X, y):
     y_pred = model.predict(X)
     # Prebuilt confusion matrix (from scikit-learn)
     prebuilt_cm = confusion_matrix(y, y_pred)
-    # Custom confusion matrix implementation
-    custom_cm = custom_confusion_matrix(y, y_pred, num_classes=model.num_classes)
-    
     accuracy = np.trace(prebuilt_cm) / np.sum(prebuilt_cm)
     print("Prebuilt Confusion Matrix:\n", prebuilt_cm)
-    print("Custom Confusion Matrix:\n", custom_cm)
+
+
+    # Custom confusion matrix implementation
+    # custom_cm = custom_confusion_matrix(y, y_pred, num_classes=model.num_classes)
+    # print("Custom Confusion Matrix:\n", custom_cm)
+
+
+
     print(f"Overall Accuracy: {accuracy * 100:.2f}%")
     
     # Compute sensitivity for each class: TPR = TP / (TP + FN)
