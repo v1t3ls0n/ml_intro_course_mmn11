@@ -20,6 +20,10 @@ class MultiClassPerceptron:
         self.max_iter = max_iter
         self.use_pocket = use_pocket
 
+
+        # FOR DEBUGGG
+        self.max_iter = 100
+
         # Each row corresponds to a weight vector for one binary classifier.
         self.weights = np.zeros((num_classes, 785))
 
