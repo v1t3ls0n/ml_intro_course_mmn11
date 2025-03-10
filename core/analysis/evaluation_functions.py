@@ -3,8 +3,8 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from logger.config import logger
-from analysis.custom_confusion_matrix import custom_confusion_matrix
+from core.logger.config import logger
+from core.analysis.custom_confusion_matrix import custom_confusion_matrix
 
 
 
