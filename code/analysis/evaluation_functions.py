@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from log.config import logger
+from logger.config import logger
 from analysis.custom_confusion_matrix import custom_confusion_matrix
 
 
@@ -174,7 +174,7 @@ def plot_class_metrics(values, metric_name="Metric", classes=None, save_path=Non
     if classes is None:
         classes = list(range(len(values)))
     
-    plt.figure(figsize=(8,5))
+    plt.figure(figsize=(10,5))
     plt.bar(classes, values, color='blue', alpha=0.7)
     plt.xlabel("Class")
     plt.ylabel(metric_name)
