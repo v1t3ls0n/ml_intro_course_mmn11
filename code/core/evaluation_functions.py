@@ -3,7 +3,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 from sklearn.metrics import confusion_matrix
-from custom_confusion_matrix import custom_confusion_matrix
+from core.custom_confusion_matrix import custom_confusion_matrix
 def evaluate_model(model, X, y):
     """
     Evaluates the trained model on data X with true labels y.
@@ -21,8 +21,8 @@ def evaluate_model(model, X, y):
 
 
     # Custom confusion matrix implementation
-    # custom_cm = custom_confusion_matrix(y, y_pred, num_classes=model.num_classes)
-    # print("Custom Confusion Matrix:\n", custom_cm)
+    custom_cm = custom_confusion_matrix(y, y_pred, num_classes=model.num_classes)
+    print("Custom Confusion Matrix:\n", custom_cm)
 
 
 
