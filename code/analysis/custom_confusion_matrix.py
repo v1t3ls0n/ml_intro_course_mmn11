@@ -1,5 +1,5 @@
-# Custom Confusion Matrix Implementation
 import numpy as np
+
 def custom_confusion_matrix(y_true, y_pred, num_classes=10):
     """
     Computes the confusion matrix from scratch.
