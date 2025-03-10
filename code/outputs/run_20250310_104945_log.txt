@@ -1,3 +1,0 @@
-=== Starting a new run ===
-Log file: outputs/run_20250310_104945_log.txt
-Image file: outputs/run_20250310_104945_confusion_mat.png
