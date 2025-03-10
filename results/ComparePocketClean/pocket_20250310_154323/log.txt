@@ -1,0 +1,5 @@
+2025-03-10 15:43:23,999 - INFO - === Starting POCKET run ===
+2025-03-10 15:43:23,999 - INFO - Run directory: ./results/ComparePocketClean\pocket_20250310_154323
+2025-03-10 15:43:23,999 - INFO - Log file: ./results/ComparePocketClean\pocket_20250310_154323\log.txt
+2025-03-10 15:43:23,999 - INFO - Training MultiClassPerceptron with pocket=True
+2025-03-10 15:43:23,999 - INFO - Training binary classifier for digit 0...
