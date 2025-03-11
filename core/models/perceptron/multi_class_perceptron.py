@@ -74,7 +74,7 @@ class MultiClassPerceptron:
         return best_w, train_losses, val_losses, test_losses, iteration_count
     
     def _compute_error(self, X, labels, w):
-        preds = np.sign(X @ w)
+        preds = np.sign(np.dot(X, w))
         preds[preds == 0] = -1
         return np.sum(preds != labels)
 
