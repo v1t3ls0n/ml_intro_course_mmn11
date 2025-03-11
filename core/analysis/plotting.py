@@ -34,3 +34,52 @@ def plot_error_curves(train_curve, test_curve, title, save_path=None):
     if save_path:
         plt.savefig(save_path, dpi=300)
     plt.show()
+
+def plot_accuracy_vs_max_iter(max_iter_values, accuracies_clean, accuracies_pocket, save_path=None):
+    """
+    Plots accuracy as a function of max_iter for both Clean and Pocket PLA.
+
+    Args:
+        max_iter_values (list): List of max_iter values.
+        accuracies_clean (list): Corresponding accuracies for Clean PLA.
+        accuracies_pocket (list): Corresponding accuracies for Pocket PLA.
+        save_path (str, optional): If provided, saves the plot to this path.
+    """
+    plt.figure(figsize=(8, 5))
+    plt.plot(max_iter_values, accuracies_clean, marker='o', linestyle='-', label='Clean PLA')
+    plt.plot(max_iter_values, accuracies_pocket, marker='s', linestyle='-', label='Pocket PLA')
+
+    plt.xlabel("max_iter")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy vs. max_iter")
+    plt.legend()
+    plt.grid(True)
+
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()
+
+
+def plot_runtime_vs_max_iter(max_iter_values, runtimes_clean, runtimes_pocket, save_path=None):
+    """
+    Plots runtime as a function of max_iter for both Clean and Pocket PLA.
+
+    Args:
+        max_iter_values (list): List of max_iter values.
+        runtimes_clean (list): Corresponding runtimes for Clean PLA.
+        runtimes_pocket (list): Corresponding runtimes for Pocket PLA.
+        save_path (str, optional): If provided, saves the plot to this path.
+    """
+    plt.figure(figsize=(8, 5))
+    plt.plot(max_iter_values, runtimes_clean, marker='o', linestyle='-', label='Clean PLA', color='blue')
+    plt.plot(max_iter_values, runtimes_pocket, marker='s', linestyle='-', label='Pocket PLA', color='red')
+
+    plt.xlabel("max_iter")
+    plt.ylabel("Runtime (seconds)")
+    plt.title("Runtime vs. max_iter")
+    plt.legend()
+    plt.grid(True)
+
+    if save_path:
+        plt.savefig(save_path)
+    plt.show()

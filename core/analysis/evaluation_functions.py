@@ -55,5 +55,6 @@ def evaluate_model(model, X, y, classes, plot_dir):
         title="Annotated Confusion Matrix", 
         save_path=f"{plot_dir}/confusion_matrix_annotated.png"
     )
-
-    return cm_builtin, accuracy, sensitivity
+    # Use stored training runtime from the model
+    runtime = model.training_runtime  
+    return cm_builtin, accuracy, sensitivity, runtime
