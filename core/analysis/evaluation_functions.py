@@ -29,15 +29,15 @@ def evaluate_model(model, X, y, classes, plot_dir):
 
     # Built-in confusion matrix
     cm_builtin = confusion_matrix(y, y_pred)
-    print("Built-in Confusion Matrix:\n{}".format(cm_builtin))
+    logger.info("Built-in Confusion Matrix:\n{}".format(cm_builtin))
 
-    # Custom confusion matrix
-    custom_cm = custom_confusion_matrix(y, y_pred, num_classes=len(classes))
-    print("Custom Confusion Matrix:\n{}".format(custom_cm))
+    # # Custom confusion matrix
+    # custom_cm = custom_confusion_matrix(y, y_pred, num_classes=len(classes))
+    # logger.info("Custom Confusion Matrix:\n{}".format(custom_cm))
 
     # Accuracy
     accuracy = np.trace(cm_builtin) / np.sum(cm_builtin)
-    print(f"Overall Accuracy: {accuracy * 100:.2f}%")
+    logger.info(f"Overall Accuracy: {accuracy * 100:.2f}%")
 
     # Sensitivity per class (TPR)
     sensitivity = []
@@ -46,14 +46,16 @@ def evaluate_model(model, X, y, classes, plot_dir):
         FN = np.sum(cm_builtin[cls, :]) - TP
         tpr = TP / (TP + FN) if (TP + FN) > 0 else 0
         sensitivity.append(tpr)
-        print(f"Sensitivity (TPR) for digit '{classes[cls]}': {tpr:.2f}")
+        logger.info(f"Sensitivity (TPR) for digit '{classes[cls]}': {tpr:.2f}")
 
     # Plot annotated confusion matrix
     plot_confusion_matrix_annotated(
         cm_builtin, 
         classes=classes, 
         title="Annotated Confusion Matrix", 
-        save_path=f"{plot_dir}/confusion_matrix_annotated.png"
+        save_path=f"{plot_dir}/confusion_matrix_annotated.png",
+        method = "PLA-Pocket" if  model.use_pocket else"PLA-Clean",
+        max_iter=model.max_iter,
     )
     # Use stored training runtime from the model
     runtime = model.training_runtime  

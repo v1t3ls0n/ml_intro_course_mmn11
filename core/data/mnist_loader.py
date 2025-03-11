@@ -15,5 +15,5 @@ def load_mnist(version=1):
         X, y = mnist['data'], mnist['target'].astype(int)
         return X, y
     except Exception as e:
-        print(f"Error loading MNIST dataset: {e}")
+        logger.info(f"Error loading MNIST dataset: {e}")
         return None, None
