@@ -80,4 +80,4 @@ class MultiClassPerceptron:
 
     def predict(self, X):
         scores = self.weights @ X.T
-        return np.argmax(scores, axis=0)
+        return np.argmax(scores, axis=1)
