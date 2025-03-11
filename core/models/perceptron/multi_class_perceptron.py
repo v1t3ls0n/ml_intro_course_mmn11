@@ -1,5 +1,6 @@
 import numpy as np
 from core.logger.config import logger
+import time
 
 class MultiClassPerceptron:
     """
@@ -40,7 +41,8 @@ class MultiClassPerceptron:
         self.final_train_error = {}      # last train error for each class
         self.final_val_error = {}        # last val error (if val set) for each class
         self.final_test_error = {}       # last test error (if test set is provided)
-
+        self.training_start_time = time.time()
+        self.training_runtime = None
     def fit(self, X, y, 
             X_val=None, y_val=None, 
             X_test=None, y_test=None):
@@ -56,6 +58,8 @@ class MultiClassPerceptron:
           self.loss_history[i]["train"], self.loss_history[i]["val"], self.loss_history[i]["test"]
         and plot them with `plot_history`.
         """
+        self.training_start_time = time.time()
+
         for cls in range(self.num_classes):
             logger.info(f"Training binary classifier for digit {cls}...")
             # Create binary labels: +1 for 'cls', -1 for all others
@@ -100,6 +104,7 @@ class MultiClassPerceptron:
             self.final_train_error[cls]    = train_losses[-1] if train_losses else None
             self.final_val_error[cls]      = val_losses[-1]   if val_losses else None
             self.final_test_error[cls]     = test_losses[-1]  if test_losses else None
+            self.training_runtime = time.time() - self.training_start_time 
 
     def _train_binary(self, 
                       X, binary_labels, cls_idx, 
