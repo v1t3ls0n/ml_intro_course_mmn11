@@ -79,5 +79,5 @@ class MultiClassPerceptron:
         return np.sum(preds != labels)
 
     def predict(self, X):
-        scores = self.weights @ X.T
+        scores = np.dot(X, self.weights.T)
         return np.argmax(scores, axis=1)
