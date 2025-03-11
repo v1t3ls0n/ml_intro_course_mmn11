@@ -14,18 +14,22 @@ class MultiClassPerceptron:
         for cls in range(self.num_classes):
             binary_labels = np.where(y == cls, 1, -1)
             logger.info(f"Training classifier for class {cls}...")
+            
+            # pass y_val, y_test as val_labels, test_labels
             w, train_losses, val_losses, test_losses, iteration_count = self._train_binary(
-                X, binary_labels=binary_labels, cls_idx=cls,
-                X_val=X_val, val_labels=val_labels,
-                X_test=X_test, test_labels=test_labels
+                X, 
+                binary_labels=binary_labels, 
+                cls_idx=cls,
+                X_val=X_val, 
+                val_labels=y_val,
+                X_test=X_test,
+                test_labels=y_test
             )
 
             self.weights[cls] = w
             self.loss_history[cls]["train"] = train_losses
             self.loss_history[cls]["val"] = val_losses
             self.loss_history[cls]["test"] = test_losses
-
-            logger.info(f"Classifier {cls} finished after {iteration_count} iterations.")
         
     def _train_binary(self, X, binary_labels, cls_idx, X_val=None, val_labels=None, X_test=None, test_labels=None):
         w = np.zeros(X.shape[1])
