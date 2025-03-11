@@ -29,15 +29,15 @@ def evaluate_model(model, X, y, classes, plot_dir):
 
     # Built-in confusion matrix
     cm_builtin = confusion_matrix(y, y_pred)
-    logger.info("Built-in Confusion Matrix:\n{}".format(cm_builtin))
+    print("Built-in Confusion Matrix:\n{}".format(cm_builtin))
 
     # Custom confusion matrix
     custom_cm = custom_confusion_matrix(y, y_pred, num_classes=len(classes))
-    logger.info("Custom Confusion Matrix:\n{}".format(custom_cm))
+    print("Custom Confusion Matrix:\n{}".format(custom_cm))
 
     # Accuracy
     accuracy = np.trace(cm_builtin) / np.sum(cm_builtin)
-    logger.info(f"Overall Accuracy: {accuracy * 100:.2f}%")
+    print(f"Overall Accuracy: {accuracy * 100:.2f}%")
 
     # Sensitivity per class (TPR)
     sensitivity = []
@@ -46,7 +46,7 @@ def evaluate_model(model, X, y, classes, plot_dir):
         FN = np.sum(cm_builtin[cls, :]) - TP
         tpr = TP / (TP + FN) if (TP + FN) > 0 else 0
         sensitivity.append(tpr)
-        logger.info(f"Sensitivity (TPR) for digit '{classes[cls]}': {tpr:.2f}")
+        print(f"Sensitivity (TPR) for digit '{classes[cls]}': {tpr:.2f}")
 
     # Plot annotated confusion matrix
     plot_confusion_matrix_annotated(

@@ -60,7 +60,7 @@ class MultiClassPerceptron:
         training_start_time = time.time()
 
         for cls in range(self.num_classes):
-            logger.info(f"Training binary classifier for digit {cls}...")
+            print(f"Training binary classifier for digit {cls}...")
             # Create binary labels: +1 for 'cls', -1 for all others
             binary_labels = np.where(y == cls, 1, -1)
 
@@ -159,7 +159,7 @@ class MultiClassPerceptron:
 
             # If no misclassifications => perfect separation
             if num_misclassified == 0:
-                logger.info(f"Classifier for digit {cls_idx} converged after {iteration_count} iterations.")
+                print(f"Classifier for digit {cls_idx} converged after {iteration_count} iterations.")
                 break
 
             # Perform batch update on all misclassified samples
