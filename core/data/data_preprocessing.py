@@ -1,26 +1,44 @@
 # data_preprocessing.py
-
 import numpy as np
-from sklearn.datasets import fetch_openml
+from sklearn.model_selection import train_test_split
+from core.data.mnist_loader import load_mnist
 
-def load_mnist():
+def preprocess_data(X, add_bias=True, normalize=True):
     """
-    Loads the MNIST dataset using fetch_openml, default parser => requires pandas installed.
+    Preprocesses MNIST data for model training.
+
+    Args:
+        X (ndarray): Raw image data (n_samples, 784).
+        add_bias (bool): Adds bias term (1) to each sample if True.
+        normalize (bool): Normalizes pixel values to [0, 1] range if True.
+
     Returns:
-        X: Array of shape (n_samples, 784) with pixel features.
-        y: Array of shape (n_samples,) with digit labels.
+        ndarray: Preprocessed dataset ready for training/testing.
     """
-    # This will use pandas internally, so make sure you have `pip install pandas`.
-    mnist = fetch_openml('mnist_784', version=1)  # default => requires pandas
-    X = mnist.data.astype(np.float32)
-    y = mnist.target.astype(np.int32)
-    return X, y
+    if normalize:
+        X = X / 255.0
+    
+    if add_bias:
+        X = np.hstack((np.ones((X.shape[0], 1)), X))
 
-def preprocess_data(X):
+    return X
+
+
+def get_mnist_train_test(normalize=True, test_size=10000):
     """
-    Normalizes pixel values to [0, 1] and adds a bias term.
-    Each image (28x28) is flattened into a 785D vector, with first element = 1 (bias).
+    Loads MNIST data, preprocesses it, and splits into train/test sets.
+
+    Args:
+        normalize (bool): If True, normalize pixel values to [0, 1].
+    
+    Returns:
+        X_train, X_test, y_train, y_test (ndarrays)
     """
-    X = X / 255.0
-    X_bias = np.hstack((np.ones((X.shape[0], 1)), X))
-    return X_bias
+    X, y = load_mnist()
+    X_processed = preprocess_data(X, normalize=True, add_bias=True)
+
+    X_train, X_test, y_train, y_test = train_test_split(
+        X_processed, y, test_size=10000, random_state=42
+    )
+
+    return X_train, X_test, y_train, y_test
