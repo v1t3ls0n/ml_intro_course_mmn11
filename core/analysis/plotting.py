@@ -1,5 +1,6 @@
 import matplotlib.pyplot as plt
 import seaborn as sns
+import numpy as np
 
 
 def plot_confusion_matrix_annotated(cm, classes, title="Annotated Confusion Matrix", save_path=None, method="PLA-Default", max_iter=1000):
@@ -131,6 +132,7 @@ def plot_performance_summary(max_iter_values, accuracies_clean, accuracies_pocke
     axes[0].plot(max_iter_values, np.array(accuracies_clean) * 100, marker='o', label='PLA Clean Accuracy')
     axes[0].plot(max_iter_values, np.array(accuracies_pocket) * 100, marker='s', label='PLA Pocket Accuracy')
     axes[0].set_ylabel("Accuracy (%)")
+    axes[0].set_xlabel("Max Iterations")
     axes[0].set_title("PLA Accuracy Comparison")
     axes[0].grid(True, linestyle='--', alpha=0.7)
     axes[0].legend()
@@ -139,6 +141,7 @@ def plot_performance_summary(max_iter_values, accuracies_clean, accuracies_pocke
     axes[1].plot(max_iter_values, np.array(sensitivities_clean) * 100, marker='o', label='PLA Clean TPR')
     axes[1].plot(max_iter_values, np.array(sensitivities_pocket) * 100, marker='s', label='PLA Pocket TPR')
     axes[1].set_ylabel("Sensitivity (TPR) (%)")
+    axes[1].set_xlabel("Max Iterations")
     axes[1].set_title("PLA Sensitivity (TPR) Comparison")
     axes[1].grid(True, linestyle='--', alpha=0.7)
     axes[1].legend()
