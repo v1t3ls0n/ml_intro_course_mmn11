@@ -1,2 +1,0 @@
---- Combined cell output (pandas-based) ---
-

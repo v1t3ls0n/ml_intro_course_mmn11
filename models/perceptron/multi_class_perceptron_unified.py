@@ -1,5 +1,5 @@
 import numpy as np
-from core.logger.config import logger
+from logger.config import logger
 
 class MultiClassPerceptron:
     """
