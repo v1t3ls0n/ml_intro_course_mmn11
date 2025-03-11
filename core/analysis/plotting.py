@@ -107,3 +107,50 @@ def plot_runtime_vs_max_iter(max_iter_values, runtimes_clean, runtimes_pocket, s
     if save_path:
         plt.savefig(save_path)
     plt.show()
+
+
+
+def plot_performance_summary(max_iter_values, accuracies_clean, accuracies_pocket,
+                             sensitivities_clean, sensitivities_pocket,
+                             runtimes_clean, runtimes_pocket):
+    """
+    Plots a summary of PLA performance metrics across different max iterations.
+
+    Args:
+        max_iter_values (list): List of max iteration values.
+        accuracies_clean (list): Accuracy values for PLA Clean.
+        accuracies_pocket (list): Accuracy values for PLA Pocket.
+        sensitivities_clean (list): Sensitivity (TPR) values for PLA Clean.
+        sensitivities_pocket (list): Sensitivity (TPR) values for PLA Pocket.
+        runtimes_clean (list): Runtime values for PLA Clean.
+        runtimes_pocket (list): Runtime values for PLA Pocket.
+    """
+    fig, axes = plt.subplots(3, 1, figsize=(12, 12))
+    
+    # Accuracy plot
+    axes[0].plot(max_iter_values, np.array(accuracies_clean) * 100, marker='o', label='PLA Clean Accuracy')
+    axes[0].plot(max_iter_values, np.array(accuracies_pocket) * 100, marker='s', label='PLA Pocket Accuracy')
+    axes[0].set_ylabel("Accuracy (%)")
+    axes[0].set_title("PLA Accuracy Comparison")
+    axes[0].grid(True, linestyle='--', alpha=0.7)
+    axes[0].legend()
+    
+    # Sensitivity (TPR) plot
+    axes[1].plot(max_iter_values, np.array(sensitivities_clean) * 100, marker='o', label='PLA Clean TPR')
+    axes[1].plot(max_iter_values, np.array(sensitivities_pocket) * 100, marker='s', label='PLA Pocket TPR')
+    axes[1].set_ylabel("Sensitivity (TPR) (%)")
+    axes[1].set_title("PLA Sensitivity (TPR) Comparison")
+    axes[1].grid(True, linestyle='--', alpha=0.7)
+    axes[1].legend()
+    
+    # Runtime plot
+    axes[2].plot(max_iter_values, runtimes_clean, marker='o', label='PLA Clean Runtime (s)')
+    axes[2].plot(max_iter_values, runtimes_pocket, marker='s', label='PLA Pocket Runtime (s)')
+    axes[2].set_xlabel("Max Iterations")
+    axes[2].set_ylabel("Runtime (s)")
+    axes[2].set_title("PLA Runtime Comparison")
+    axes[2].grid(True, linestyle='--', alpha=0.7)
+    axes[2].legend()
+    
+    plt.tight_layout()
+    plt.show()
