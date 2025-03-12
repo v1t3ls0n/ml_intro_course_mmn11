@@ -78,8 +78,6 @@ def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None, test_c
     if max_iter is None:
         max_iter = 0
 
-    # NOTE: The plotting code has been removed.
-    # Instead, we now return the computed values along with any additional info
     additional_info = {
         "train_curve": train_curve,
         "test_curve": test_curve,
