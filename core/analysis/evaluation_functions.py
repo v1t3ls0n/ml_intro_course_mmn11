@@ -5,7 +5,7 @@ from sklearn.metrics import confusion_matrix
 from core.logger.config import logger
 # from core.analysis.custom_confusion_matrix import custom_confusion_matrix  # Uncomment if needed
 
-def evaluate_model(model, X, y, classes, plot_dir, train_curve=None, test_curve=None, show_plots=True):
+def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None, test_curve=None, show_plots=True):
     """
     Evaluates the trained model on data X with true labels y.
     Computes and logs:
