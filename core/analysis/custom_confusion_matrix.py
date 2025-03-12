@@ -1,4 +1,4 @@
-# import numpy as np
+import numpy as np
 
 def custom_confusion_matrix(y_true, y_pred, num_classes=10):
     """
