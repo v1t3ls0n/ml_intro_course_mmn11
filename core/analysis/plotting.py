@@ -3,7 +3,7 @@ import seaborn as sns
 import numpy as np
 
 def plot_confusion_matrix_annotated(cm, classes, title="Annotated Confusion Matrix",
-                                    save_path=None, method="PLA-Default", max_iter=1000):
+                                    save_path=None, method="ML Model Name", max_iter=1000):
     """
     Plots a confusion matrix with numeric annotations in each cell.
 
@@ -12,8 +12,8 @@ def plot_confusion_matrix_annotated(cm, classes, title="Annotated Confusion Matr
         classes (list): List of class labels (e.g., [0..9] for MNIST).
         title (str): Title for the plot.
         save_path (str): If provided, file path to save the figure.
-        method (str): Indicates the method/model name. Default is "PLA-Default".
-                      Examples: "PLA-Clean", "PLA-Pocket", "Softmax", etc.
+        method (str): Indicating the method/model name (e.g., "PLA-Clean", "PLA-Pocket", "Softmax").
+                      Default is "PLA-Default" to preserve original usage.
         max_iter (int): Maximum number of iterations used in training (for display).
     """
     plt.figure(figsize=(10, 8))
@@ -31,9 +31,7 @@ def plot_confusion_matrix_annotated(cm, classes, title="Annotated Confusion Matr
         plt.savefig(save_path, dpi=300)
     plt.show()
 
-
-def plot_error_curves(train_curve, test_curve, title,
-                      save_path=None, method="PLA-Clean", max_iter=1000):
+def plot_error_curves(train_curve, test_curve, title, save_path=None, method="ML Model Name", max_iter=1000):
     """
     Plots error curves for training and testing errors over iterations.
 
@@ -42,8 +40,8 @@ def plot_error_curves(train_curve, test_curve, title,
         test_curve (list): List of testing errors over iterations.
         title (str): Title for the plot.
         save_path (str): If provided, file path to save the figure.
-        method (str): Indicates the method/model name. Default is "PLA-Clean".
-                      Examples: "PLA-Clean", "PLA-Pocket", "Softmax", etc.
+        method (str): Indicating the method/model name (e.g., "PLA-Clean", "PLA-Pocket", "Softmax").
+                      Default is "PLA-Clean" to preserve original usage.
         max_iter (int): Maximum number of iterations used in training (for display).
     """
     plt.figure(figsize=(10, 6))
@@ -63,12 +61,9 @@ def plot_error_curves(train_curve, test_curve, title,
         plt.savefig(save_path, dpi=300)
     plt.show()
 
-
 def plot_accuracy_vs_max_iter(max_iter_values, accuracies_clean, accuracies_pocket, save_path=None):
     """
     Plots accuracy as a function of max_iter for both Clean and Pocket PLA.
-    This can still be used for PLA comparisons. If you want to compare Softmax,
-    you can create a similar function or reuse this one with different arrays.
 
     Args:
         max_iter_values (list): List of max_iter values.
@@ -90,12 +85,9 @@ def plot_accuracy_vs_max_iter(max_iter_values, accuracies_clean, accuracies_pock
         plt.savefig(save_path)
     plt.show()
 
-
 def plot_runtime_vs_max_iter(max_iter_values, runtimes_clean, runtimes_pocket, save_path=None):
     """
     Plots runtime as a function of max_iter for both Clean and Pocket PLA.
-    Similarly, you can adapt or replicate this function if you want to compare
-    Softmax runtime to PLA runtime.
 
     Args:
         max_iter_values (list): List of max_iter values.
@@ -117,14 +109,12 @@ def plot_runtime_vs_max_iter(max_iter_values, runtimes_clean, runtimes_pocket, s
         plt.savefig(save_path)
     plt.show()
 
-
 def plot_performance_summary(max_iter_values, accuracies_clean, accuracies_pocket,
                              sensitivities_clean, sensitivities_pocket,
                              runtimes_clean, runtimes_pocket):
     """
-    Plots a summary of PLA performance metrics (Accuracy, Sensitivity, and Runtime)
-    across different max iterations. This is specifically tailored for
-    comparing two PLA variants (Clean vs. Pocket).
+    Plots a summary of PLA performance metrics (Accuracy, Sensitivity, and Runtime) 
+    across different max iterations.
 
     Args:
         max_iter_values (list): List of max iteration values.
@@ -167,8 +157,7 @@ def plot_performance_summary(max_iter_values, accuracies_clean, accuracies_pocke
     plt.tight_layout()
     plt.show()
 
-
-def plot_performance_summary_extended(max_iter_values,
+def plot_performance_summary_extended(max_iter_values, 
                                       accuracies_clean, accuracies_pocket,
                                       sensitivities_clean, sensitivities_pocket,
                                       selectivities_clean, selectivities_pocket,

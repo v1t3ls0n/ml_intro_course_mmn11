@@ -4,7 +4,7 @@ import seaborn as sns
 from sklearn.metrics import confusion_matrix
 from core.logger.config import logger
 
-def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None, test_curve=None, show_plots=True):
+def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None, test_curve=None, show_plots=True, model_name=None):
     """
     Evaluates the trained model on data X with true labels y.
     Computes and logs:
