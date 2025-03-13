@@ -20,8 +20,8 @@ def plot_confusion_matrix_annotated(cm, classes, title="Annotated Confusion Matr
     sns.heatmap(cm, annot=True, fmt='d', cmap='Blues',
                 xticklabels=classes, yticklabels=classes)
     
-    plt.xlabel('Predicted Label')
-    plt.ylabel('Actual Label')
+    plt.xlabel('Actual Label')
+    plt.ylabel('Predicted Label')
     
     # Add the method and max_iter to the title
     full_title = f"{title}\n({method}, Max Iterations: {max_iter})"
