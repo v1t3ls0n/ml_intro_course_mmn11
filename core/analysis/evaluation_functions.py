@@ -17,19 +17,10 @@ def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None,
       - Overall accuracy
       - Sensitivity (TPR) per class
       - Selectivity (Specificity, TNR) per class
+      - runtime (model.training_runtime if available)
 
-    Args:
-        model: Trained classification model.
-        X (ndarray): Data samples.
-        y (ndarray): True labels.
-        classes (list): List of class labels.
-        plot_dir (str): Directory to save any plots (not used here).
-        train_curve (list, optional): Training loss values per iteration.
-        test_curve (list, optional): Test loss values per iteration.
-        show_plots (bool): Whether to display plots interactively (not used here).
-        model_name (str, optional): A string identifier for the model 
-            (e.g. "Clean PLA", "Pocket PLA", "Softmax").
-            If not provided, we attempt to deduce from the model’s attributes.
+    For comparisons between Perceptron and Regressions, pay attention to 'runtime'
+    to see how each model performs given its training time budget.
 
     Returns:
         cm (np.ndarray): Confusion matrix.
@@ -37,21 +28,20 @@ def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None,
         sensitivity (list): Sensitivity (TPR) per class.
         selectivity (list): Selectivity (TNR) per class.
         runtime (float or None): Training runtime if tracked in the model.
-        additional_info (dict): Extra info for plotting (loss curves, model name,
-            max_iter, learning_rate, etc.).
+        additional_info (dict): Extra info for plotting (loss curves, model name, etc.).
     """
-    # ---------- 1) Predictions ----------
+    # 1) Predictions
     y_pred = model.predict(X)
 
-    # ---------- 2) Confusion Matrix ----------
+    # 2) Confusion Matrix
     cm_builtin = confusion_matrix(y, y_pred)
     logger.info("Built-in Confusion Matrix:\n{}".format(cm_builtin))
 
-    # ---------- 3) Overall Accuracy ----------
+    # 3) Overall Accuracy
     accuracy = np.trace(cm_builtin) / np.sum(cm_builtin)
     logger.info(f"Overall Accuracy: {accuracy * 100:.2f}%")
 
-    # ---------- 4) Class-wise TPR & TNR ----------
+    # 4) Class-wise TPR & TNR
     sensitivity = []
     selectivity = []
     for cls in tqdm(range(len(classes)), desc="Evaluating class metrics"):
@@ -65,17 +55,15 @@ def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None,
 
         sensitivity.append(tpr)
         selectivity.append(tnr)
-
         logger.info(f"Class '{classes[cls]}': TPR={tpr:.2f}, TNR={tnr:.2f}")
 
-    # ---------- 5) Determine Model Name for Plotting ----------
+    # 5) Determine Model Name for Plotting
     if model_name is not None:
         plot_method = model_name
     else:
         if hasattr(model, "model_name"):
             plot_method = model.model_name
         else:
-            # Try to detect from known attributes or class name
             use_pocket = getattr(model, "use_pocket", None)
             if use_pocket is True:
                 plot_method = "Pocket PLA"
@@ -87,13 +75,12 @@ def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None,
                 else:
                     plot_method = "GenericModel"
 
-    # ---------- 6) Extract max_iter (if available) ----------
+    # 6) Extract max_iter if available
     max_iter = getattr(model, "max_iter", 0)
 
-    # ---------- 7) Extract & Store Learning Rate (if available) ----------
+    # 7) Extract & Store Learning Rate (if available)
     learning_rate = getattr(model, "learning_rate", None)
 
-    # ---------- Additional Info ----------
     additional_info = {
         "train_curve": train_curve,
         "test_curve": test_curve,
@@ -102,7 +89,7 @@ def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None,
         "learning_rate": learning_rate
     }
 
-    # ---------- Attempt to retrieve training runtime ----------
+    # Attempt to retrieve training runtime
     runtime = getattr(model, "training_runtime", None)
 
     return cm_builtin, accuracy, sensitivity, selectivity, runtime, additional_info
