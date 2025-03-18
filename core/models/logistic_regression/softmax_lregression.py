@@ -7,12 +7,14 @@ class SoftmaxRegression:
     Multinomial Logistic Regression (Softmax) for multi-class classification.
     Uses full-batch gradient descent on cross-entropy loss with an AdaGrad-style adaptive learning rate (if enabled).
     Supports early stopping if the training loss improvement is too small.
+    Also implements improved weight initialization and learning rate scheduling.
     """
 
     def __init__(self, 
                  num_classes=10, 
                  max_iter=200, 
                  learning_rate=0.01,
+                 lr_decay=0.0,
                  adaptive_lr=True,
                  early_stopping=True,
                  tol=1e-5,
@@ -22,6 +24,9 @@ class SoftmaxRegression:
             num_classes (int): Number of classes.
             max_iter (int): Maximum iterations for gradient descent.
             learning_rate (float): Base step size for gradient updates.
+            lr_decay (float): Decay rate for learning rate scheduling.
+                              The effective learning rate at iteration t is 
+                              learning_rate / (1 + lr_decay * t).
             adaptive_lr (bool): Flag to enable/disable AdaGrad-style adaptive learning rate. Default is True.
             early_stopping (bool): Flag to enable early stopping based on loss improvement. Default is True.
             tol (float): Minimum improvement in training loss to qualify as progress. Default is 1e-5.
@@ -30,6 +35,7 @@ class SoftmaxRegression:
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.learning_rate = learning_rate
+        self.lr_decay = lr_decay
         self.adaptive_lr = adaptive_lr
         self.early_stopping = early_stopping
         self.tol = tol
@@ -87,9 +93,9 @@ class SoftmaxRegression:
         y_one_hot = self._one_hot_encode(y)
         n_samples, n_features = X.shape
 
-        # Initialize weights if not already set
+        # Improved weight initialization: small random values (e.g., from a normal distribution)
         if self.weights is None:
-            self.weights = np.zeros((self.num_classes, n_features))
+            self.weights = np.random.randn(self.num_classes, n_features) * 0.01
 
         # Initialize gradient accumulator for AdaGrad if adaptive learning rate is enabled
         if self.adaptive_lr:
@@ -110,12 +116,15 @@ class SoftmaxRegression:
             wait = 0
 
         for iteration in range(self.max_iter):
+            # Learning rate scheduling: effective_lr decays over iterations
+            effective_lr = self.learning_rate / (1 + self.lr_decay * iteration)
+
             # Forward pass: compute logits, probabilities, and training loss
             logits = X @ self.weights.T
             probs = self._softmax(logits)
             train_loss = self._cross_entropy_loss(probs, y_one_hot)
 
-            # Record training loss for each class
+            # Record training loss for each class (same loss for all classes)
             for i in range(self.num_classes):
                 self.loss_history[i]["train"].append(train_loss)
 
@@ -138,26 +147,24 @@ class SoftmaxRegression:
                         logger.info(f"Early stopping triggered at iteration {iteration+1} with training loss {train_loss:.6f}")
                         break
 
-            # Gradient computation
-            dW = (probs - y_one_hot).T @ X  # shape: (num_classes, n_features)
+            # Gradient computation: fully vectorized
+            dW = (probs - y_one_hot).T @ X
             dW /= n_samples
 
             if self.adaptive_lr:
                 # Accumulate squared gradients (AdaGrad accumulator)
                 self.G += dW ** 2
-
                 # Compute adaptive gradient update: scale by inverse square root of accumulated gradients
                 adaptive_dW = dW / (np.sqrt(self.G) + epsilon)
-
-                # Update weights using the adaptive gradient update
-                self.weights -= self.learning_rate * adaptive_dW
+                # Update weights using effective learning rate
+                self.weights -= effective_lr * adaptive_dW
             else:
-                # Standard gradient descent update
-                self.weights -= self.learning_rate * dW
+                # Standard gradient descent update with scheduled learning rate
+                self.weights -= effective_lr * dW
 
             if (iteration + 1) % 100 == 0:
                 if self.adaptive_lr:
-                    avg_adaptive_lr = self.learning_rate / (np.mean(np.sqrt(self.G) + epsilon))
+                    avg_adaptive_lr = effective_lr / (np.mean(np.sqrt(self.G) + epsilon))
                     logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
                 else:
                     logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}")
