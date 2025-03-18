@@ -6,24 +6,34 @@ class LinearRegression:
     """
     Multi-class classifier that uses linear regression (least squares) on one-hot labels.
     Trains via batch gradient descent using an AdaGrad-style adaptive learning rate (if enabled).
+    Supports early stopping if the training loss improvement is too small.
     """
 
     def __init__(self, 
                  num_classes=10, 
                  max_iter=100, 
                  learning_rate=0.001,
-                 adaptive_lr=True):
+                 adaptive_lr=True,
+                 early_stopping=True,
+                 tol=1e-5,
+                 patience=10):
         """
         Args:
             num_classes (int): Number of classes (e.g., 10 for MNIST).
             max_iter (int): Maximum number of gradient descent iterations.
             learning_rate (float): Base step size for gradient updates.
             adaptive_lr (bool): Flag to enable/disable adaptive learning rate. Default is True.
+            early_stopping (bool): Flag to enable early stopping based on loss improvement. Default is False.
+            tol (float): Minimum improvement in training loss required to reset patience. Default is 1e-5.
+            patience (int): Number of iterations with insufficient loss improvement before stopping. Default is 10.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.learning_rate = learning_rate
         self.adaptive_lr = adaptive_lr
+        self.early_stopping = early_stopping
+        self.tol = tol
+        self.patience = patience
 
         # Weights will be shape (num_classes, n_features)
         self.weights = None  
@@ -82,6 +92,11 @@ class LinearRegression:
         lambda_reg = 0.01    # L2 regularization parameter
         max_grad_norm = 1.0  # Threshold for gradient clipping
 
+        # Early stopping variables if enabled
+        if self.early_stopping:
+            best_loss = np.inf
+            wait = 0
+
         for iteration in range(self.max_iter):
             # Compute predictions: shape (n_samples, num_classes)
             preds = X @ self.weights.T
@@ -97,6 +112,17 @@ class LinearRegression:
                 test_loss = self._mse_loss(test_preds, y_test_one_hot)
                 for i in range(self.num_classes):
                     self.loss_history[i]["test"].append(test_loss)
+
+            # Check early stopping condition if enabled
+            if self.early_stopping:
+                if best_loss - train_loss > self.tol:
+                    best_loss = train_loss
+                    wait = 0
+                else:
+                    wait += 1
+                    if wait >= self.patience:
+                        logger.info(f"Early stopping triggered at iteration {iteration+1} with training loss {train_loss:.6f}")
+                        break
 
             # Compute gradient of MSE with respect to weights
             dW = (preds - y_one_hot).T @ X

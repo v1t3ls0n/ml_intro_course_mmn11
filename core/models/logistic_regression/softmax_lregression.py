@@ -6,24 +6,34 @@ class SoftmaxRegression:
     """
     Multinomial Logistic Regression (Softmax) for multi-class classification.
     Uses full-batch gradient descent on cross-entropy loss with an AdaGrad-style adaptive learning rate (if enabled).
+    Supports early stopping if the training loss improvement is too small.
     """
 
     def __init__(self, 
                  num_classes=10, 
                  max_iter=200, 
                  learning_rate=0.01,
-                 adaptive_lr=True):
+                 adaptive_lr=True,
+                 early_stopping=True,
+                 tol=1e-5,
+                 patience=10):
         """
         Args:
             num_classes (int): Number of classes.
             max_iter (int): Maximum iterations for gradient descent.
             learning_rate (float): Base step size for gradient updates.
             adaptive_lr (bool): Flag to enable/disable AdaGrad-style adaptive learning rate. Default is True.
+            early_stopping (bool): Flag to enable early stopping. Default is False.
+            tol (float): Minimum improvement in training loss to qualify as progress. Default is 1e-5.
+            patience (int): Number of iterations with insufficient improvement before stopping. Default is 10.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.learning_rate = learning_rate
         self.adaptive_lr = adaptive_lr
+        self.early_stopping = early_stopping
+        self.tol = tol
+        self.patience = patience
 
         # Weight matrix (initialized in fit)
         self.weights = None  # shape: (num_classes, n_features)
@@ -68,6 +78,7 @@ class SoftmaxRegression:
         """
         Trains the Softmax Regression model via batch gradient descent.
         If adaptive_lr is enabled, uses an AdaGrad-style adaptive learning rate.
+        If early_stopping is enabled, training stops when progress in loss improvement is too small.
         Optionally computes test loss if X_test and y_test are provided.
         """
         start_time = time.time()
@@ -93,6 +104,11 @@ class SoftmaxRegression:
 
         epsilon = 1e-8  # Small constant for numerical stability
 
+        # Variables for early stopping
+        if self.early_stopping:
+            best_loss = np.inf
+            wait = 0
+
         for iteration in range(self.max_iter):
             # Forward pass: compute logits, probabilities, and training loss
             logits = X @ self.weights.T
@@ -110,6 +126,17 @@ class SoftmaxRegression:
                 test_loss = self._cross_entropy_loss(test_probs, y_test_one_hot)
                 for i in range(self.num_classes):
                     self.loss_history[i]["test"].append(test_loss)
+
+            # Check early stopping condition if enabled
+            if self.early_stopping:
+                if best_loss - train_loss > self.tol:
+                    best_loss = train_loss
+                    wait = 0
+                else:
+                    wait += 1
+                    if wait >= self.patience:
+                        logger.info(f"Early stopping triggered at iteration {iteration+1} with training loss {train_loss:.6f}")
+                        break
 
             # Gradient computation
             dW = (probs - y_one_hot).T @ X  # shape: (num_classes, n_features)
@@ -135,12 +162,12 @@ class SoftmaxRegression:
                 else:
                     logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}")
 
-        # Populate final tracking info
-        total_iters = self.max_iter
+        # Populate final tracking info; use the iteration count at exit
+        total_iters = iteration + 1
         for i in range(self.num_classes):
             self.converged_iterations[i] = total_iters
             self.final_train_error[i] = self.loss_history[i]["train"][-1]
-            if X_test is not None and y_test_one_hot is not None:
+            if X_test is not None and y_test_one_hot is not None and self.loss_history[i]["test"]:
                 self.final_test_error[i] = self.loss_history[i]["test"][-1]
             else:
                 self.final_test_error[i] = None
