@@ -8,8 +8,8 @@ if sys.platform == 'win32':
 else:
     from tqdm.notebook import tqdm
 
-def evaluate_model(model, X, y, classes, plot_dir=None, train_curve=None,
-                   test_curve=None, show_plots=True, model_name=None):
+def evaluate_model(model, X, y,  plot_dir=None, train_curve=None,
+                   test_curve=None, show_plots=True, model_name=None,classes=range(10)):
     """
     Evaluates the trained model on data X with true labels y.
     Computes and logs:
