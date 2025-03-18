@@ -23,7 +23,7 @@ class SoftmaxRegression:
             max_iter (int): Maximum iterations for gradient descent.
             learning_rate (float): Base step size for gradient updates.
             adaptive_lr (bool): Flag to enable/disable AdaGrad-style adaptive learning rate. Default is True.
-            early_stopping (bool): Flag to enable early stopping. Default is False.
+            early_stopping (bool): Flag to enable early stopping based on loss improvement. Default is True.
             tol (float): Minimum improvement in training loss to qualify as progress. Default is 1e-5.
             patience (int): Number of iterations with insufficient improvement before stopping. Default is 10.
         """
@@ -119,7 +119,7 @@ class SoftmaxRegression:
             for i in range(self.num_classes):
                 self.loss_history[i]["train"].append(train_loss)
 
-            # Compute test loss if test data is provided
+            # Optionally compute and record test loss
             if X_test is not None and y_test_one_hot is not None:
                 test_logits = X_test @ self.weights.T
                 test_probs = self._softmax(test_logits)
@@ -178,7 +178,7 @@ class SoftmaxRegression:
     def predict_proba(self, X):
         """
         Returns softmax probabilities for each sample.
-        shape of return: (n_samples, num_classes)
+        Shape: (n_samples, num_classes)
         """
         logits = X @ self.weights.T
         return self._softmax(logits)
