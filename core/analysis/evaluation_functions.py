@@ -211,3 +211,42 @@ def aggregate_iteration_losses_softmax(softmax_list):
     avg_curve = np.mean(all_models_train_curves, axis=0)
 
     return avg_curve
+
+
+
+def aggregate_iteration_losses_linear(linreg_list):
+    """
+    Aggregates iteration-level training losses for a list of LinearRegressionClassifier models.
+    Produces one overall train-loss curve by:
+      1) averaging across classes (within each model),
+      2) averaging across all models in linreg_list.
+    """
+    if not linreg_list:
+        return []
+
+    num_classes = linreg_list[0].num_classes
+
+    # 1) Find max length of iteration history
+    max_len = 0
+    for model in linreg_list:
+        for cls_idx in range(num_classes):
+            length = len(model.loss_history[cls_idx]["train"])
+            if length > max_len:
+                max_len = length
+
+    all_models_train_curves = []
+    for model in linreg_list:
+        class_train_curves = []
+        for cls_idx in range(num_classes):
+            t_arr = model.loss_history[cls_idx]["train"][:]
+            if len(t_arr) < max_len:
+                t_arr += [t_arr[-1]] * (max_len - len(t_arr))
+            class_train_curves.append(t_arr)
+
+        class_train_curves = np.array(class_train_curves)
+        model_avg_curve = np.mean(class_train_curves, axis=0)
+        all_models_train_curves.append(model_avg_curve)
+
+    all_models_train_curves = np.array(all_models_train_curves)
+    avg_curve = np.mean(all_models_train_curves, axis=0)
+    return avg_curve

@@ -290,3 +290,29 @@ def plot_metric_vs_learning_rate(learning_rates, metric_values, metric_name="Acc
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
 
     plt.show()
+
+
+def plot_accuracy_vs_max_iter_4models(
+    max_iter_values,
+    accuracies_clean,
+    accuracies_pocket,
+    accuracies_softmax=None,
+    accuracies_linear=None,
+    save_path=None
+):
+    plt.figure(figsize=(8, 5))
+    plt.plot(max_iter_values, accuracies_clean, marker='o', label='Clean PLA')
+    plt.plot(max_iter_values, accuracies_pocket, marker='s', label='Pocket PLA')
+    if accuracies_softmax is not None:
+        plt.plot(max_iter_values, accuracies_softmax, marker='^', label='Softmax')
+    if accuracies_linear is not None:
+        plt.plot(max_iter_values, accuracies_linear, marker='d', label='Linear')
+
+    plt.xlabel("max_iter")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy vs. max_iter (4 models)")
+    plt.legend()
+    plt.grid(True)
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
