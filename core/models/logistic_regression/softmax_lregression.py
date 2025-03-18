@@ -5,22 +5,25 @@ from core.logger.config import logger
 class SoftmaxRegression:
     """
     Multinomial Logistic Regression (Softmax) for multi-class classification.
-    Uses full-batch gradient descent on cross-entropy loss.
+    Uses full-batch gradient descent on cross-entropy loss with an AdaGrad-style adaptive learning rate (if enabled).
     """
 
     def __init__(self, 
                  num_classes=10, 
                  max_iter=200, 
-                 learning_rate=0.01):
+                 learning_rate=0.01,
+                 adaptive_lr=True):
         """
         Args:
             num_classes (int): Number of classes.
             max_iter (int): Maximum iterations for gradient descent.
             learning_rate (float): Base step size for gradient updates.
+            adaptive_lr (bool): Flag to enable/disable AdaGrad-style adaptive learning rate. Default is True.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.learning_rate = learning_rate
+        self.adaptive_lr = adaptive_lr
 
         # Weight matrix (initialized in fit)
         self.weights = None  # shape: (num_classes, n_features)
@@ -63,7 +66,8 @@ class SoftmaxRegression:
 
     def fit(self, X, y, X_test=None, y_test=None):
         """
-        Trains the Softmax Regression model via batch gradient descent using an AdaGrad-style adaptive learning rate.
+        Trains the Softmax Regression model via batch gradient descent.
+        If adaptive_lr is enabled, uses an AdaGrad-style adaptive learning rate.
         Optionally computes test loss if X_test and y_test are provided.
         """
         start_time = time.time()
@@ -76,9 +80,10 @@ class SoftmaxRegression:
         if self.weights is None:
             self.weights = np.zeros((self.num_classes, n_features))
 
-        # Initialize gradient accumulator for AdaGrad
-        if not hasattr(self, 'G'):
-            self.G = np.zeros_like(self.weights)
+        # Initialize gradient accumulator for AdaGrad if adaptive learning rate is enabled
+        if self.adaptive_lr:
+            if not hasattr(self, 'G'):
+                self.G = np.zeros_like(self.weights)
 
         # Prepare one-hot test labels if test data is provided
         if X_test is not None and y_test is not None:
@@ -110,18 +115,25 @@ class SoftmaxRegression:
             dW = (probs - y_one_hot).T @ X  # shape: (num_classes, n_features)
             dW /= n_samples
 
-            # Accumulate squared gradients (AdaGrad accumulator)
-            self.G += dW ** 2
+            if self.adaptive_lr:
+                # Accumulate squared gradients (AdaGrad accumulator)
+                self.G += dW ** 2
 
-            # Compute adaptive gradient update: scale by inverse square root of accumulated gradients
-            adaptive_dW = dW / (np.sqrt(self.G) + epsilon)
+                # Compute adaptive gradient update: scale by inverse square root of accumulated gradients
+                adaptive_dW = dW / (np.sqrt(self.G) + epsilon)
 
-            # Update weights using the adaptive gradient update
-            self.weights -= self.learning_rate * adaptive_dW
+                # Update weights using the adaptive gradient update
+                self.weights -= self.learning_rate * adaptive_dW
+            else:
+                # Standard gradient descent update
+                self.weights -= self.learning_rate * dW
 
             if (iteration + 1) % 100 == 0:
-                avg_adaptive_lr = self.learning_rate / (np.mean(np.sqrt(self.G) + epsilon))
-                logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
+                if self.adaptive_lr:
+                    avg_adaptive_lr = self.learning_rate / (np.mean(np.sqrt(self.G) + epsilon))
+                    logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
+                else:
+                    logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}")
 
         # Populate final tracking info
         total_iters = self.max_iter

@@ -5,22 +5,25 @@ from core.logger.config import logger
 class LinearRegression:
     """
     Multi-class classifier that uses linear regression (least squares) on one-hot labels.
-    Trains via batch gradient descent using an AdaGrad-style adaptive learning rate.
+    Trains via batch gradient descent using an AdaGrad-style adaptive learning rate (if enabled).
     """
 
     def __init__(self, 
                  num_classes=10, 
                  max_iter=100, 
-                 learning_rate=0.001):
+                 learning_rate=0.001,
+                 adaptive_lr=True):
         """
         Args:
             num_classes (int): Number of classes (e.g., 10 for MNIST).
             max_iter (int): Maximum number of gradient descent iterations.
             learning_rate (float): Base step size for gradient updates.
+            adaptive_lr (bool): Flag to enable/disable adaptive learning rate. Default is True.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.learning_rate = learning_rate
+        self.adaptive_lr = adaptive_lr
 
         # Weights will be shape (num_classes, n_features)
         self.weights = None  
@@ -64,9 +67,10 @@ class LinearRegression:
         if self.weights is None:
             self.weights = np.zeros((self.num_classes, n_features))
 
-        # Initialize gradient accumulator for AdaGrad
-        if not hasattr(self, 'G'):
-            self.G = np.zeros_like(self.weights)
+        # Initialize gradient accumulator for AdaGrad if adaptive learning rate is enabled
+        if self.adaptive_lr:
+            if not hasattr(self, 'G'):
+                self.G = np.zeros_like(self.weights)
 
         # Prepare test data if provided
         if X_test is not None and y_test is not None:
@@ -106,14 +110,17 @@ class LinearRegression:
             # Add L2 regularization term
             dW += lambda_reg * self.weights
 
-            # Accumulate squared gradients (AdaGrad accumulator)
-            self.G += dW ** 2
+            if self.adaptive_lr:
+                # Accumulate squared gradients (AdaGrad accumulator)
+                self.G += dW ** 2
 
-            # Compute the adaptive gradient update
-            adaptive_dW = dW / (np.sqrt(self.G) + epsilon)
-
-            # Update weights using the adaptive gradient update
-            self.weights -= self.learning_rate * adaptive_dW
+                # Compute the adaptive gradient update
+                adaptive_dW = dW / (np.sqrt(self.G) + epsilon)
+                # Update weights using the adaptive gradient update
+                self.weights -= self.learning_rate * adaptive_dW
+            else:
+                # Standard gradient descent update
+                self.weights -= self.learning_rate * dW
 
             # Check for NaN or Inf in weights
             if np.any(np.isnan(self.weights)) or np.any(np.isinf(self.weights)):
@@ -121,9 +128,12 @@ class LinearRegression:
                 break
 
             if (iteration + 1) % 100 == 0:
-                avg_adaptive_lr = self.learning_rate / np.mean(np.sqrt(self.G) + epsilon)
-                logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, "
-                            f"Gradient Norm: {grad_norm:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
+                if self.adaptive_lr:
+                    avg_adaptive_lr = self.learning_rate / np.mean(np.sqrt(self.G) + epsilon)
+                    logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, "
+                                f"Gradient Norm: {grad_norm:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
+                else:
+                    logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, Gradient Norm: {grad_norm:.4f}")
 
         self.training_runtime = time.time() - start_time
         logger.info(f"LinearRegressionClassifier training completed in {self.training_runtime:.2f} seconds.")
