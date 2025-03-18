@@ -100,7 +100,7 @@ class SoftmaxRegression:
         # Improved weight initialization: small random values (e.g., from a normal distribution)
         if self.weights is None:
             delta = np.sqrt(1 / d_features)  # Small value for initialization
-            self.weights = np.random.standard_normal(self.num_classes, d_features)  * delta # Optional: standard normal initialization
+            self.weights = np.random.standard_normal((self.num_classes, d_features))  * delta # Optional: standard normal initialization
 
             # old initialization method
             # self.weights = np.random.randn(self.num_classes, d_features) * 0.01 # Optional: small random initialization
