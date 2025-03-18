@@ -4,174 +4,118 @@ import time
 
 class MultiClassPerceptron:
     """
-    A unified multi-class perceptron that can operate in:
-      - "clean" (no-pocket) mode, or
-      - "pocket" mode.
-    Controlled by the 'use_pocket' parameter in __init__.
+    Multi-class perceptron using one-vs-all.
+    Can use pocket or clean updates (toggled by 'use_pocket').
     """
 
     def __init__(self, num_classes=10, max_iter=1000, use_pocket=True):
         """
         Args:
-            num_classes (int): Number of classes (10 for MNIST).
-            max_iter (int): Maximum number of iterations for the batch update loop.
-            use_pocket (bool): If True, use the pocket algorithm; if False, no pocket logic.
+            num_classes (int): Number of classes.
+            max_iter (int): Max iterations for batch update.
+            use_pocket (bool): Use pocket logic if True.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.use_pocket = use_pocket
 
-        # Each row corresponds to a weight vector for one binary classifier.
+        # Weight matrix: each row is a class-specific weight vector
         self.weights = np.zeros((num_classes, 785))
 
-        # For each class i, we'll store: (train_losses, test_losses)
-        # train_losses[i] => list of iteration-level training errors for class i
-        # test_losses[i]  => list of iteration-level test errors (if X_test,y_test)
+        # Store training/test losses by class
         self.loss_history = {
-            i: {
-                "train": [],
-                "test":  []
-            } for i in range(num_classes)
+            i: {"train": [], "test": []} for i in range(num_classes)
         }
 
-        # Additional tracking
-        self.converged_iterations = {}   # how many iterations each class used
-        self.final_train_error = {}      # last train error for each class
-        self.final_test_error = {}       # last test error (if test set is provided)
+        self.converged_iterations = {}
+        self.final_train_error = {}
+        self.final_test_error = {}
         self.training_runtime = None
 
     def fit(self, X, y, X_test=None, y_test=None):
         """
-        Trains the multi-class perceptron using one-vs-all strategy.
-        For each class i, create a binary classification problem:
-          +1 for class i, and -1 for all other classes.
-
-        Optionally, test data (X_test, y_test) can be provided to track test error per iteration (for real "train vs. test" curves).
-
-        After training, you can retrieve iteration-level errors per class from:
-          self.loss_history[i]["train"], self.loss_history[i]["test"]
-        and plot them with `plot_history`.
+        Trains a one-vs-all set of binary perceptrons.
+        Optionally tracks test losses if X_test,y_test are given.
         """
         training_start_time = time.time()
 
         for cls in range(self.num_classes):
-            logger.info(f"Training binary classifier for digit {cls}...")
-            # Create binary labels: +1 for 'cls', -1 for all others
+            logger.info(f"Training for digit {cls}...")
             binary_labels = np.where(y == cls, 1, -1)
 
-            # Test labels, if any
-            if X_test is not None and y_test is not None:
-                binary_test_labels = np.where(y_test == cls, 1, -1)
-            else:
-                binary_test_labels = None
+            # Prepare test labels if test data is provided
+            binary_test_labels = np.where(y_test == cls, 1, -1) if (X_test is not None and y_test is not None) else None
 
-            (best_w, 
-             train_losses, 
-             test_losses, 
-             iteration_count) = self._train_binary(
-                X, 
-                binary_labels, 
-                cls, 
-                X_test,
-                binary_test_labels
+            best_w, train_losses, test_losses, iters = self._train_binary(
+                X, binary_labels, cls, X_test, binary_test_labels
             )
 
-            # Store final weights
             self.weights[cls] = best_w
-
-            # Store iteration-level losses
             self.loss_history[cls]["train"] = train_losses
-            self.loss_history[cls]["test"]  = test_losses
+            self.loss_history[cls]["test"] = test_losses
+            self.converged_iterations[cls] = iters
+            self.final_train_error[cls] = train_losses[-1] if train_losses else None
+            self.final_test_error[cls] = test_losses[-1] if test_losses else None
 
-            # Record iteration count & final errors
-            self.converged_iterations[cls] = iteration_count
-            self.final_train_error[cls]    = train_losses[-1] if train_losses else None
-            self.final_test_error[cls]     = test_losses[-1]  if test_losses else None
-            self.training_runtime = time.time() - training_start_time 
+        self.training_runtime = time.time() - training_start_time
 
-    def _train_binary(self, X, binary_labels, cls_idx, X_test=None, test_labels=None):
+    def _train_binary(self, X, y, cls_idx, X_test=None, y_test=None):
         """
-        Trains a single binary perceptron (for digit `cls_idx`).
-        If 'use_pocket' is True, uses pocket logic; otherwise, does "clean" updates only.
-
-        We record iteration-level train error, and optionally test error if provided.
-
-        Returns:
-            final_w (ndarray): The final weight vector used (pocket or not).
-            train_losses (list): iteration-level training error (# misclassifications).
-            test_losses  (list): iteration-level test error (if X_test,y_test).
-            iteration_count (int): how many iterations used before convergence or max_iter.
+        Trains a single binary perceptron for one class.
+        Returns final/best weights and iteration-level error histories.
         """
-        n_samples, n_features = X.shape
-        w = np.zeros(n_features)  # current weight vector
-
-        # If using pocket, track the best w so far
+        w = np.zeros(X.shape[1])
         if self.use_pocket:
             pocket_w = w.copy()
-            pocket_error = self._compute_error(X, binary_labels, w)
+            pocket_err = self._compute_error(X, y, w)
 
-        # Compute initial errors
-        current_train_err = self._compute_error(X, binary_labels, w)
-        train_losses = [current_train_err]
-
+        train_err = self._compute_error(X, y, w)
+        train_losses = [train_err]
         test_losses = []
 
-        # If we have test data, compute initial test error
-        if X_test is not None and test_labels is not None:
-            test_error = self._compute_error(X_test, test_labels, w)
-            test_losses.append(test_error)
-
-        iteration_count = 0
+        if X_test is not None and y_test is not None:
+            test_err = self._compute_error(X_test, y_test, w)
+            test_losses.append(test_err)
 
         for t in range(self.max_iter):
-            iteration_count = t + 1
             preds = np.sign(X @ w)
-            preds[preds == 0] = -1  # treat 0 as -1
+            preds[preds == 0] = -1
+            misclassified = (preds != y)
 
-            misclassified = (preds != binary_labels)
-            num_misclassified = np.sum(misclassified)
-
-            # If no misclassifications => perfect separation
-            if num_misclassified == 0:
-                logger.info(f"Classifier for digit {cls_idx} converged after {iteration_count} iterations.")
+            # Stop if perfect separation
+            if not np.any(misclassified):
+                logger.info(f"Digit {cls_idx} converged at iteration {t+1}.")
                 break
 
-            # Perform batch update on all misclassified samples
-            update = np.sum(X[misclassified] * binary_labels[misclassified][:, None], axis=0)
-            w += update
+            # Update with all misclassified samples
+            w += np.sum(X[misclassified] * y[misclassified, None], axis=0)
 
-            # Compute current training error
-            current_train_err = self._compute_error(X, binary_labels, w)
-            train_losses.append(current_train_err)
+            train_err = self._compute_error(X, y, w)
+            train_losses.append(train_err)
 
-            # Test error
-            if X_test is not None and test_labels is not None:
-                test_err = self._compute_error(X_test, test_labels, w)
+            if X_test is not None and y_test is not None:
+                test_err = self._compute_error(X_test, y_test, w)
                 test_losses.append(test_err)
 
-            # If pocket is enabled, check if this w is better
-            if self.use_pocket:
-                if current_train_err < pocket_error:
-                    pocket_error = current_train_err
-                    pocket_w = w.copy()
+            # Pocket logic
+            if self.use_pocket and train_err < pocket_err:
+                pocket_err = train_err
+                pocket_w = w.copy()
 
-        # Return either the final w or the best pocket w
         final_w = pocket_w if self.use_pocket else w
+        return final_w, train_losses, test_losses, len(train_losses)
 
-        return final_w, train_losses, test_losses, iteration_count
-
-    def _compute_error(self, X, labels, w):
+    def _compute_error(self, X, y, w):
         """
-        Computes the number of misclassifications given weight vector w.
+        Returns the number of misclassified samples.
         """
         preds = np.sign(X @ w)
         preds[preds == 0] = -1
-        return np.sum(preds != labels)
+        return np.sum(preds != y)
 
     def predict(self, X):
         """
-        Predicts the digit label for each sample in X (with bias).
-        For each sample, compute w_i^T x for all classes i, pick the max.
+        Predicts class by choosing the weight vector with max activation.
         """
-        scores = X @ self.weights.T  # shape (n_samples, num_classes)
+        scores = X @ self.weights.T
         return np.argmax(scores, axis=1)

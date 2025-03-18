@@ -5,7 +5,7 @@ from core.logger.config import logger
 class SoftmaxRegression:
     """
     Multinomial Logistic Regression (Softmax) for multi-class classification.
-    Uses full-batch gradient descent on the cross-entropy loss.
+    Uses full-batch gradient descent on cross-entropy loss.
     """
 
     def __init__(self, 
@@ -14,25 +14,29 @@ class SoftmaxRegression:
                  learning_rate=0.01):
         """
         Args:
-            num_classes (int): Number of classes (10 for MNIST).
-            max_iter (int): Maximum number of gradient descent iterations.
+            num_classes (int): Number of classes.
+            max_iter (int): Maximum iterations for gradient descent.
             learning_rate (float): Step size for gradient updates.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.learning_rate = learning_rate
 
-        # Will be initialized in fit() once X_train shape is known
+        # Weight matrix (initialized in fit)
         self.weights = None  # shape: (num_classes, n_features)
 
-        # For tracking training progress
-        self.loss_history = []
+        # Store training/test losses by class
+        self.loss_history = {
+            i: {"train": [], "test": []} for i in range(num_classes)
+        }
+        self.converged_iterations = {}
+        self.final_train_error = {}
+        self.final_test_error = {}
         self.training_runtime = None
 
     def _one_hot_encode(self, y):
         """
         Converts integer labels into one-hot vectors.
-        e.g., 5 -> [0,0,0,0,0,1,0,0,0,0]
         """
         n_samples = y.shape[0]
         one_hot = np.zeros((n_samples, self.num_classes))
@@ -42,8 +46,6 @@ class SoftmaxRegression:
     def _softmax(self, logits):
         """
         Applies the softmax function row-wise.
-        logits shape: (n_samples, num_classes)
-        returns probabilities of same shape.
         """
         # For numerical stability, subtract max from each row
         exps = np.exp(logits - np.max(logits, axis=1, keepdims=True))
@@ -56,54 +58,66 @@ class SoftmaxRegression:
             L = -1/N * sum( y_one_hot * log(probs) )
         """
         n_samples = y_one_hot.shape[0]
-        # Clip probabilities to avoid log(0)
         eps = 1e-15
         log_probs = np.log(np.clip(probs, eps, 1 - eps))
-        loss = -np.sum(y_one_hot * log_probs) / n_samples
-        return loss
+        return -np.sum(y_one_hot * log_probs) / n_samples
 
-    def fit(self, X, y):
+    def fit(self, X, y, X_test=None, y_test=None):
         """
         Trains the Softmax Regression model via batch gradient descent.
-        
-        Args:
-            X (ndarray): Training data of shape (n_samples, n_features).
-            y (ndarray): True labels of shape (n_samples,).
+        Optionally computes test loss if X_test,y_test are provided.
         """
         start_time = time.time()
 
-        # One-hot encode the labels
+        # One-hot encode labels
         y_one_hot = self._one_hot_encode(y)
+        n_samples, n_features = X.shape
 
         # Initialize weights if not already
-        n_features = X.shape[1]
         if self.weights is None:
             self.weights = np.zeros((self.num_classes, n_features))
 
+        # If test data provided, prepare one-hot as well
+        if X_test is not None and y_test is not None:
+            y_test_one_hot = self._one_hot_encode(y_test)
+        else:
+            y_test_one_hot = None
+
         for iteration in range(self.max_iter):
-            # Compute logits: shape (n_samples, num_classes)
+            # Forward pass
             logits = X @ self.weights.T
-            # Compute probabilities via softmax
             probs = self._softmax(logits)
+            train_loss = self._cross_entropy_loss(probs, y_one_hot)
 
-            # Compute cross-entropy loss (for logging)
-            loss = self._cross_entropy_loss(probs, y_one_hot)
-            self.loss_history.append(loss)
+            # Record the same train loss under each class (to mirror structure)
+            for i in range(self.num_classes):
+                self.loss_history[i]["train"].append(train_loss)
 
-            # Gradient of cross-entropy w.r.t. weights
-            # grad shape: (num_classes, n_features)
-            # (probs - y_one_hot) has shape (n_samples, num_classes)
-            # X has shape (n_samples, n_features)
-            # We'll do gradient per class:
-            n_samples = X.shape[0]
+            # Optional test loss
+            if X_test is not None and y_test_one_hot is not None:
+                test_logits = X_test @ self.weights.T
+                test_probs = self._softmax(test_logits)
+                test_loss = self._cross_entropy_loss(test_probs, y_test_one_hot)
+                for i in range(self.num_classes):
+                    self.loss_history[i]["test"].append(test_loss)
+
+            # Gradient descent step
             dW = (probs - y_one_hot).T @ X  # shape: (num_classes, n_features)
             dW /= n_samples
-
-            # Update weights
             self.weights -= self.learning_rate * dW
 
             if (iteration + 1) % 10 == 0:
-                logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {loss:.4f}")
+                logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}")
+
+        # Populate final tracking info
+        total_iters = self.max_iter
+        for i in range(self.num_classes):
+            self.converged_iterations[i] = total_iters
+            self.final_train_error[i] = self.loss_history[i]["train"][-1]
+            if X_test is not None and y_test_one_hot is not None:
+                self.final_test_error[i] = self.loss_history[i]["test"][-1]
+            else:
+                self.final_test_error[i] = None
 
         self.training_runtime = time.time() - start_time
         logger.info(f"SoftmaxRegression training completed in {self.training_runtime:.2f} seconds.")
