@@ -5,7 +5,7 @@ from core.logger.config import logger
 class LinearRegression:
     """
     Multi-class classifier that uses linear regression (least squares) on one-hot labels.
-    Trains via batch gradient descent.
+    Trains via batch gradient descent using an AdaGrad-style adaptive learning rate.
     """
 
     def __init__(self, 
@@ -16,7 +16,7 @@ class LinearRegression:
         Args:
             num_classes (int): Number of classes (e.g., 10 for MNIST).
             max_iter (int): Maximum number of gradient descent iterations.
-            learning_rate (float): Step size for gradient updates.
+            learning_rate (float): Base step size for gradient updates.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
@@ -25,7 +25,7 @@ class LinearRegression:
         # Weights will be shape (num_classes, n_features)
         self.weights = None  
 
-        # We'll store losses by class, in the same style as Softmax/Perceptron:
+        # We'll store losses by class
         self.loss_history = {
             i: {"train": [], "test": []} for i in range(num_classes)
         }
@@ -49,33 +49,24 @@ class LinearRegression:
     def _mse_loss(self, preds, y_one_hot):
         """
         Mean Squared Error (MSE):
-            MSE = 1/(2N) * sum( (preds - y_one_hot)^2 )
-        or use 1/(N). We'll do 1/(2N) for convenience.
+            MSE = 1/(N) * sum( (preds - y_one_hot)^2 )
         """
-        n_samples = y_one_hot.shape[0]
-        # The factor 1/2 is optional. We'll include it to match standard MSE definition.
-        return 0.5 * np.mean((preds - y_one_hot) ** 2)
+        return np.mean((preds - y_one_hot) ** 2)
 
     def fit(self, X, y, X_test=None, y_test=None):
-        """
-        Trains the Linear Regression classifier (one-hot approach) via
-        batch gradient descent on the MSE loss.
-
-        Args:
-            X (ndarray): Training data of shape (n_samples, n_features).
-            y (ndarray): True labels of shape (n_samples,).
-            X_test (ndarray, optional): Test data for tracking test loss.
-            y_test (ndarray, optional): Test labels for tracking test loss.
-        """
         start_time = time.time()
 
         # One-hot encode the labels
         y_one_hot = self._one_hot_encode(y)
         n_samples, n_features = X.shape
 
-        # Initialize weights if not already
+        # Initialize weights if not already set
         if self.weights is None:
             self.weights = np.zeros((self.num_classes, n_features))
+
+        # Initialize gradient accumulator for AdaGrad
+        if not hasattr(self, 'G'):
+            self.G = np.zeros_like(self.weights)
 
         # Prepare test data if provided
         if X_test is not None and y_test is not None:
@@ -83,45 +74,56 @@ class LinearRegression:
         else:
             y_test_one_hot = None
 
+        epsilon = 1e-8       # Small constant for numerical stability
+        lambda_reg = 0.01    # L2 regularization parameter
+        max_grad_norm = 1.0  # Threshold for gradient clipping
+
         for iteration in range(self.max_iter):
             # Compute predictions: shape (n_samples, num_classes)
             preds = X @ self.weights.T
 
-            # Compute training loss
+            # Compute training loss and record it
             train_loss = self._mse_loss(preds, y_one_hot)
-
-            # Record the same train loss under each class (like in Softmax)
             for i in range(self.num_classes):
                 self.loss_history[i]["train"].append(train_loss)
 
-            # Optionally compute test loss
+            # Optionally compute and record test loss
             if X_test is not None and y_test_one_hot is not None:
                 test_preds = X_test @ self.weights.T
                 test_loss = self._mse_loss(test_preds, y_test_one_hot)
                 for i in range(self.num_classes):
                     self.loss_history[i]["test"].append(test_loss)
 
-            # Compute gradient of MSE w.r.t. weights
-            # MSE gradient: (1/N)* ( (preds - y_one_hot).T @ X )
-            # shape: (num_classes, n_features)
-            diff = preds - y_one_hot              # shape (n_samples, num_classes)
-            grad = (diff.T @ X) / n_samples       # shape (num_classes, n_features)
+            # Compute gradient of MSE with respect to weights
+            dW = (preds - y_one_hot).T @ X
+            dW /= n_samples
 
-            # Gradient descent step
-            self.weights -= self.learning_rate * grad
+            # Compute gradient norm for possible clipping
+            grad_norm = np.linalg.norm(dW)
+            if grad_norm > max_grad_norm:
+                dW *= max_grad_norm / grad_norm
 
-            # Optional logging every 10 iterations
-            if (iteration + 1) % 10 == 0:
-                logger.info(f"Iter {iteration+1}/{self.max_iter}, Train Loss: {train_loss:.4f}")
+            # Add L2 regularization term
+            dW += lambda_reg * self.weights
 
-        # Populate final tracking info for each class
-        for i in range(self.num_classes):
-            self.converged_iterations[i] = self.max_iter
-            self.final_train_error[i] = self.loss_history[i]["train"][-1]
-            if X_test is not None and y_test_one_hot is not None:
-                self.final_test_error[i] = self.loss_history[i]["test"][-1]
-            else:
-                self.final_test_error[i] = None
+            # Accumulate squared gradients (AdaGrad accumulator)
+            self.G += dW ** 2
+
+            # Compute the adaptive gradient update
+            adaptive_dW = dW / (np.sqrt(self.G) + epsilon)
+
+            # Update weights using the adaptive gradient update
+            self.weights -= self.learning_rate * adaptive_dW
+
+            # Check for NaN or Inf in weights
+            if np.any(np.isnan(self.weights)) or np.any(np.isinf(self.weights)):
+                logger.error("Weights contain NaN or Inf values. Stopping training.")
+                break
+
+            if (iteration + 1) % 100 == 0:
+                avg_adaptive_lr = self.learning_rate / np.mean(np.sqrt(self.G) + epsilon)
+                logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, "
+                            f"Gradient Norm: {grad_norm:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
 
         self.training_runtime = time.time() - start_time
         logger.info(f"LinearRegressionClassifier training completed in {self.training_runtime:.2f} seconds.")
