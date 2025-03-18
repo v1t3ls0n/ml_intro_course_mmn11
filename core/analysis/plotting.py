@@ -62,13 +62,11 @@ def plot_accuracy_vs_max_iter(
         plt.plot(max_iter_values, accuracies_pocket, marker='s', label='Pocket PLA')
     if accuracies_softmax is not None:
         plt.plot(max_iter_values, accuracies_softmax, marker='^', label='Softmax')
-
     plt.xlabel("max_iter")
     plt.ylabel("Accuracy")
     plt.title("Accuracy vs. max_iter")
     plt.legend()
     plt.grid(True)
-
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
@@ -91,13 +89,11 @@ def plot_runtime_vs_max_iter(
         plt.plot(max_iter_values, runtimes_pocket, marker='s', label='Pocket PLA')
     if runtimes_softmax is not None:
         plt.plot(max_iter_values, runtimes_softmax, marker='^', label='Softmax')
-
     plt.xlabel("max_iter")
     plt.ylabel("Runtime (seconds)")
     plt.title("Runtime vs. max_iter")
     plt.legend()
     plt.grid(True)
-
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
@@ -115,8 +111,6 @@ def plot_performance_summary_extended(
     Old iteration-based summary (Accuracy, TPR, TNR, Runtime vs. max_iter).
     """
     fig, axes = plt.subplots(4, 1, figsize=(10, 16))
-
-    # 1) Accuracy
     if accuracies_clean is not None:
         axes[0].plot(max_iter_values, np.array(accuracies_clean)*100, marker='o', label='Clean PLA')
     if accuracies_pocket is not None:
@@ -128,7 +122,6 @@ def plot_performance_summary_extended(
     axes[0].grid(True, linestyle='--', alpha=0.7)
     axes[0].legend()
 
-    # 2) Sensitivity
     if sensitivities_clean is not None:
         axes[1].plot(max_iter_values, np.array(sensitivities_clean)*100, marker='o', label='Clean PLA')
     if sensitivities_pocket is not None:
@@ -140,7 +133,6 @@ def plot_performance_summary_extended(
     axes[1].grid(True, linestyle='--', alpha=0.7)
     axes[1].legend()
 
-    # 3) Selectivity
     if selectivities_clean is not None:
         axes[2].plot(max_iter_values, np.array(selectivities_clean)*100, marker='o', label='Clean PLA')
     if selectivities_pocket is not None:
@@ -152,7 +144,6 @@ def plot_performance_summary_extended(
     axes[2].grid(True, linestyle='--', alpha=0.7)
     axes[2].legend()
 
-    # 4) Runtime
     if runtimes_clean is not None:
         axes[3].plot(max_iter_values, runtimes_clean, marker='o', label='Clean PLA')
     if runtimes_pocket is not None:
@@ -166,7 +157,6 @@ def plot_performance_summary_extended(
 
     for ax in axes:
         ax.set_xlabel("Max Iterations")
-
     plt.tight_layout()
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
@@ -195,31 +185,22 @@ def plot_accuracy_vs_runtime(
     If pocket or softmax data is None, skip that line.
     """
     plt.figure(figsize=(8, 5))
-
-    # Clean line
     plt.plot(runtimes_clean, np.array(accuracies_clean)*100, marker='o', label="Clean PLA")
-
-    # Pocket line if provided
     if (runtimes_pocket is not None) and (accuracies_pocket is not None):
         plt.plot(runtimes_pocket, np.array(accuracies_pocket)*100, marker='s', label="Pocket PLA")
-
-    # Softmax line if provided
     if (runtimes_softmax is not None) and (accuracies_softmax is not None):
         plt.plot(runtimes_softmax, np.array(accuracies_softmax)*100, marker='^', label="Softmax")
-
     plt.xlabel("Runtime (seconds)")
     plt.ylabel("Accuracy (%)")
     plt.title(title)
     plt.legend()
     plt.grid(True)
-
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
 
 
 def plot_performance_summary_extended_by_runtime(
-    # For up to 3 models: Clean, Pocket, Softmax
     runtimes_clean, accuracies_clean, sensitivities_clean, selectivities_clean,
     runtimes_pocket=None, accuracies_pocket=None, sensitivities_pocket=None, selectivities_pocket=None,
     runtimes_softmax=None, accuracies_softmax=None, sensitivities_softmax=None, selectivities_softmax=None,
@@ -234,8 +215,6 @@ def plot_performance_summary_extended_by_runtime(
     for Clean, Pocket, Softmax. Skip lines if any is None.
     """
     fig, axes = plt.subplots(3, 1, figsize=(8, 12))
-
-    # 1) Accuracy vs. Runtime
     axes[0].plot(runtimes_clean,   np.array(accuracies_clean)*100, marker='o', label='Clean PLA')
     if (runtimes_pocket is not None) and (accuracies_pocket is not None):
         axes[0].plot(runtimes_pocket,  np.array(accuracies_pocket)*100, marker='s', label='Pocket PLA')
@@ -246,8 +225,7 @@ def plot_performance_summary_extended_by_runtime(
     axes[0].set_title("Accuracy vs. Runtime")
     axes[0].legend()
     axes[0].grid(True, linestyle='--', alpha=0.7)
-
-    # 2) Sensitivity vs. Runtime
+    
     axes[1].plot(runtimes_clean,   np.array(sensitivities_clean)*100, marker='o', label='Clean PLA')
     if (runtimes_pocket is not None) and (sensitivities_pocket is not None):
         axes[1].plot(runtimes_pocket,  np.array(sensitivities_pocket)*100, marker='s', label='Pocket PLA')
@@ -258,8 +236,7 @@ def plot_performance_summary_extended_by_runtime(
     axes[1].set_title("Sensitivity vs. Runtime")
     axes[1].legend()
     axes[1].grid(True, linestyle='--', alpha=0.7)
-
-    # 3) Selectivity vs. Runtime
+    
     axes[2].plot(runtimes_clean,   np.array(selectivities_clean)*100, marker='o', label='Clean PLA')
     if (runtimes_pocket is not None) and (selectivities_pocket is not None):
         axes[2].plot(runtimes_pocket,  np.array(selectivities_pocket)*100, marker='s', label='Pocket PLA')
@@ -270,7 +247,7 @@ def plot_performance_summary_extended_by_runtime(
     axes[2].set_title("Selectivity vs. Runtime")
     axes[2].legend()
     axes[2].grid(True, linestyle='--', alpha=0.7)
-
+    
     fig.suptitle(title, fontsize=14)
     plt.tight_layout()
     if save_path:
@@ -294,8 +271,6 @@ def plot_performance_summary_4models_by_runtime(
       - Linear
     """
     fig, axes = plt.subplots(3, 1, figsize=(9, 14))
-
-    # Subplot 1: Accuracy
     axes[0].plot(runtimes_clean,   np.array(accuracies_clean)*100,    marker='o', label='Clean PLA')
     axes[0].plot(runtimes_pocket,  np.array(accuracies_pocket)*100,   marker='s', label='Pocket PLA')
     axes[0].plot(runtimes_softmax, np.array(accuracies_softmax)*100,  marker='^', label='Softmax')
@@ -306,7 +281,6 @@ def plot_performance_summary_4models_by_runtime(
     axes[0].legend()
     axes[0].grid(True, linestyle='--', alpha=0.7)
 
-    # Subplot 2: Sensitivity
     axes[1].plot(runtimes_clean,   np.array(sensitivities_clean)*100,    marker='o', label='Clean PLA')
     axes[1].plot(runtimes_pocket,  np.array(sensitivities_pocket)*100,   marker='s', label='Pocket PLA')
     axes[1].plot(runtimes_softmax, np.array(sensitivities_softmax)*100,  marker='^', label='Softmax')
@@ -317,7 +291,6 @@ def plot_performance_summary_4models_by_runtime(
     axes[1].legend()
     axes[1].grid(True, linestyle='--', alpha=0.7)
 
-    # Subplot 3: Selectivity
     axes[2].plot(runtimes_clean,   np.array(selectivities_clean)*100,    marker='o', label='Clean PLA')
     axes[2].plot(runtimes_pocket,  np.array(selectivities_pocket)*100,   marker='s', label='Pocket PLA')
     axes[2].plot(runtimes_softmax, np.array(selectivities_softmax)*100,  marker='^', label='Softmax')
@@ -352,13 +325,112 @@ def plot_accuracy_vs_runtime_4models(
     plt.plot(rt_pocket,  np.array(acc_pocket)*100,  marker='s', label='Pocket PLA')
     plt.plot(rt_softmax, np.array(acc_softmax)*100, marker='^', label='Softmax')
     plt.plot(rt_linear,  np.array(acc_linear)*100,  marker='d', label='Linear')
-
     plt.xlabel("Runtime (seconds)")
     plt.ylabel("Accuracy (%)")
     plt.title(title)
     plt.legend()
     plt.grid(True)
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
 
+
+def plot_train_curves_three_models(
+    clean_train_curve=None,
+    pocket_train_curve=None,
+    softmax_train_curve=None,
+    title="Aggregated Training Curves",
+    max_iter=0,
+    save_path=None
+):
+    """
+    Plots up to three aggregated training-loss curves (Clean, Pocket, Softmax).
+    If any curve is None, it is skipped.
+    """
+    plt.figure(figsize=(8, 5))
+    if clean_train_curve is not None:
+        plt.plot(clean_train_curve, marker='o', label="Clean PLA")
+    if pocket_train_curve is not None:
+        plt.plot(pocket_train_curve, marker='s', label="Pocket PLA")
+    if softmax_train_curve is not None:
+        plt.plot(softmax_train_curve, marker='^', label="Softmax")
+    plt.xlabel("Iterations")
+    plt.ylabel("Average Training Loss / Error")
+    full_title = f"{title}\n(Max Iter={max_iter})"
+    plt.title(full_title)
+    plt.legend()
+    plt.grid(True, linestyle='--', alpha=0.7)
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_metric_vs_learning_rate(learning_rates, metric_values, metric_name="Accuracy",
+                                 use_log_scale=True, save_path=None):
+    """
+    Plots a given metric (e.g. accuracy, sensitivity, runtime) vs. a range of learning rates.
+    """
+    plt.figure(figsize=(7, 5))
+    plt.plot(learning_rates, metric_values, marker='o', label=f"{metric_name} vs. LR")
+    if use_log_scale:
+        plt.xscale("log")
+    plt.xlabel("Learning Rate")
+    plt.ylabel(metric_name)
+    plt.title(f"{metric_name} vs. Learning Rate")
+    plt.grid(True, linestyle='--', alpha=0.7)
+    plt.legend()
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_accuracy_vs_max_iter_4models(
+    max_iter_values,
+    acc_clean,
+    acc_pocket,
+    acc_softmax,
+    acc_linear,
+    save_path=None
+):
+    """
+    Plots accuracy vs. max_iter for four models: Clean, Pocket, Softmax, Linear.
+    """
+    plt.figure(figsize=(8, 5))
+    plt.plot(max_iter_values, acc_clean,   marker='o', label='Clean PLA')
+    plt.plot(max_iter_values, acc_pocket,  marker='s', label='Pocket PLA')
+    plt.plot(max_iter_values, acc_softmax, marker='^', label='Softmax')
+    plt.plot(max_iter_values, acc_linear,  marker='d', label='Linear')
+    plt.xlabel("max_iter")
+    plt.ylabel("Accuracy")
+    plt.title("Accuracy vs. max_iter (4 models)")
+    plt.legend()
+    plt.grid(True)
+    if save_path:
+        plt.savefig(save_path, dpi=300, bbox_inches='tight')
+    plt.show()
+
+
+def plot_runtime_vs_max_iter_4models(
+    max_iter_values,
+    rt_clean,
+    rt_pocket,
+    rt_softmax,
+    rt_linear,
+    save_path=None
+):
+    """
+    Plots runtime vs. max_iter for four models: Clean, Pocket, Softmax, Linear.
+    """
+    plt.figure(figsize=(8, 5))
+    plt.plot(max_iter_values, rt_clean,   marker='o', label='Clean PLA')
+    plt.plot(max_iter_values, rt_pocket,  marker='s', label='Pocket PLA')
+    plt.plot(max_iter_values, rt_softmax, marker='^', label='Softmax')
+    plt.plot(max_iter_values, rt_linear,  marker='d', label='Linear')
+    plt.xlabel("max_iter")
+    plt.ylabel("Runtime (seconds)")
+    plt.title("Runtime vs. max_iter (4 models)")
+    plt.legend()
+    plt.grid(True)
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
