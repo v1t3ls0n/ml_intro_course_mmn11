@@ -1,43 +1,40 @@
 import numpy as np
-from core.logger.config import logger
+import pandas as pd
 import time
+from core.logger.config import logger
 
 class MultiClassPerceptron:
     """
     Multi-class perceptron using one-vs-all.
     Can use pocket or clean updates (toggled by 'use_pocket').
-    Supports early stopping; if early_stopping is False, training runs for max_iter iterations.
     """
 
-    def __init__(self, num_classes=10, max_iter=1000, use_pocket=True,
-                 early_stopping=True, tol=1e-5, patience=10):
+    def __init__(self, num_classes=10, max_iter=1000, use_pocket=True):
         """
         Args:
             num_classes (int): Number of classes.
-            max_iter (int): Maximum iterations for batch update.
+            max_iter (int): Max iterations for batch update.
             use_pocket (bool): Use pocket logic if True.
-            early_stopping (bool): Enable early stopping if True.
-            tol (float): Minimum improvement in training error required to reset patience.
-            patience (int): Number of iterations with insufficient improvement before stopping.
         """
         self.num_classes = num_classes
         self.max_iter = max_iter
         self.use_pocket = use_pocket
-        self.early_stopping = early_stopping
-        self.tol = tol
-        self.patience = patience
 
-        # Weight matrix: each row is a class-specific weight vector (initialized with bias term)
+        # Weight matrix: each row is a class-specific weight vector
         self.weights = np.zeros((num_classes, 785))
 
         # Store training/test losses by class
         self.loss_history = {
             i: {"train": [], "test": []} for i in range(num_classes)
         }
+
         self.converged_iterations = {}
         self.final_train_error = {}
         self.final_test_error = {}
         self.training_runtime = None
+
+        # iteration logs
+        self.iter_logs = []
 
     def fit(self, X, y, X_test=None, y_test=None):
         """
@@ -51,7 +48,9 @@ class MultiClassPerceptron:
             binary_labels = np.where(y == cls, 1, -1)
 
             # Prepare test labels if test data is provided
-            binary_test_labels = np.where(y_test == cls, 1, -1) if (X_test is not None and y_test is not None) else None
+            binary_test_labels = None
+            if (X_test is not None) and (y_test is not None):
+                binary_test_labels = np.where(y_test == cls, 1, -1)
 
             best_w, train_losses, test_losses, iters = self._train_binary(
                 X, binary_labels, cls, X_test, binary_test_labels
@@ -76,14 +75,9 @@ class MultiClassPerceptron:
             pocket_w = w.copy()
             pocket_err = self._compute_error(X, y, w)
 
-        # Compute initial error and set up early stopping variables if enabled
-        best_err = self._compute_error(X, y, w)
-        wait = 0
-
-        train_err = best_err
+        train_err = self._compute_error(X, y, w)
         train_losses = [train_err]
         test_losses = []
-
         if X_test is not None and y_test is not None:
             test_err = self._compute_error(X_test, y_test, w)
             test_losses.append(test_err)
@@ -93,36 +87,27 @@ class MultiClassPerceptron:
             preds[preds == 0] = -1
             misclassified = (preds != y)
 
-            # Stop if perfect separation
             if not np.any(misclassified):
                 logger.info(f"Digit {cls_idx} converged at iteration {t+1}.")
                 break
 
-            # Update using all misclassified samples
+            # update with all misclassified samples
             w += np.sum(X[misclassified] * y[misclassified, None], axis=0)
 
             train_err = self._compute_error(X, y, w)
             train_losses.append(train_err)
-
             if X_test is not None and y_test is not None:
                 test_err = self._compute_error(X_test, y_test, w)
                 test_losses.append(test_err)
 
-            # Pocket logic: keep the best weight vector seen so far
+            # Pocket logic
             if self.use_pocket and train_err < pocket_err:
                 pocket_err = train_err
                 pocket_w = w.copy()
 
-            # Early stopping check: only if early_stopping flag is True
-            if self.early_stopping:
-                if best_err - train_err > self.tol:
-                    best_err = train_err
-                    wait = 0
-                else:
-                    wait += 1
-                    if wait >= self.patience:
-                        logger.info(f"Early stopping triggered for digit {cls_idx} at iteration {t+1} with training error {train_err}.")
-                        break
+            # Optionally log iteration data
+            # (Here we only store train_err, but you can store test_err too)
+            # You might do: self.iter_logs.append({...}) if you want a global iteration log
 
         final_w = pocket_w if self.use_pocket else w
         return final_w, train_losses, test_losses, len(train_losses)
@@ -141,3 +126,12 @@ class MultiClassPerceptron:
         """
         scores = X @ self.weights.T
         return np.argmax(scores, axis=1)
+
+    def get_iteration_df(self):
+        """
+        For a multi-class perceptron, we don't have a single iteration-level log
+        in this code. If you want a global iteration DataFrame,
+        you'd store logs in self.iter_logs during _train_binary.
+        For now, we return an empty DataFrame or custom logic.
+        """
+        return pd.DataFrame([])  # or some aggregated logic

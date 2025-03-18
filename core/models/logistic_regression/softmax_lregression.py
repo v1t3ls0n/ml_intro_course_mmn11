@@ -1,4 +1,5 @@
 import numpy as np
+import pandas as pd
 import time
 from core.logger.config import logger
 
@@ -53,6 +54,9 @@ class SoftmaxRegression:
         self.final_test_error = {}
         self.training_runtime = None
 
+        # We'll store iteration-level logs in a list of dicts, then convert to DataFrame
+        self.iter_logs = []  # each element is {"iteration": i, "train_loss": ..., "lr": ...}
+
     def _one_hot_encode(self, y):
         """
         Converts integer labels into one-hot vectors.
@@ -87,6 +91,7 @@ class SoftmaxRegression:
         If early_stopping is enabled, training stops when progress in loss improvement is too small.
         Optionally computes test loss if X_test and y_test are provided.
         """
+        import time
         start_time = time.time()
 
         # One-hot encode labels
@@ -135,6 +140,8 @@ class SoftmaxRegression:
                 test_loss = self._cross_entropy_loss(test_probs, y_test_one_hot)
                 for i in range(self.num_classes):
                     self.loss_history[i]["test"].append(test_loss)
+            else:
+                test_loss = None
 
             # Check early stopping condition if enabled
             if self.early_stopping:
@@ -162,12 +169,36 @@ class SoftmaxRegression:
                 # Standard gradient descent update with scheduled learning rate
                 self.weights -= effective_lr * dW
 
+            # Logging iteration data in self.iter_logs
+            iteration_data = {
+                "iteration": iteration + 1,
+                "train_loss": train_loss,
+                "effective_lr": effective_lr
+            }
+            # If test_loss is computed
+            if test_loss is not None:
+                iteration_data["test_loss"] = test_loss
+
+            # If using AdaGrad, log an "avg_adaptive_lr"
+            if self.adaptive_lr:
+                # avg_adaptive_lr is the ratio of effective_lr to the mean of sqrt(G)
+                avg_adaptive_lr = effective_lr / (np.mean(np.sqrt(self.G) + epsilon))
+                iteration_data["avg_adaptive_lr"] = avg_adaptive_lr
+
+            self.iter_logs.append(iteration_data)
+
+            # Logging every 100 iterations
             if (iteration + 1) % 100 == 0:
                 if self.adaptive_lr:
-                    avg_adaptive_lr = effective_lr / (np.mean(np.sqrt(self.G) + epsilon))
-                    logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}, Avg Adaptive LR: {avg_adaptive_lr:.6f}")
+                    logger.info(
+                        f"Iter {iteration+1}/{self.max_iter}, "
+                        f"Loss: {train_loss:.4f}, "
+                        f"Avg Adaptive LR: {iteration_data['avg_adaptive_lr']:.6f}"
+                    )
                 else:
-                    logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}")
+                    logger.info(
+                        f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}"
+                    )
 
         # Populate final tracking info; use the iteration count at exit
         total_iters = iteration + 1
@@ -181,6 +212,14 @@ class SoftmaxRegression:
 
         self.training_runtime = time.time() - start_time
         logger.info(f"SoftmaxRegression training completed in {self.training_runtime:.2f} seconds.")
+
+    def get_iteration_df(self):
+        """
+        Returns a pandas DataFrame of iteration-level logs, including columns:
+          ['iteration', 'train_loss', 'test_loss', 'effective_lr', 'avg_adaptive_lr']
+        (Some columns may be missing if not used.)
+        """
+        return pd.DataFrame(self.iter_logs)
 
     def predict_proba(self, X):
         """
