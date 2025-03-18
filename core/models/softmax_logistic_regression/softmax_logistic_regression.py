@@ -62,18 +62,13 @@ class SoftmaxRegression:
         loss = -np.sum(y_one_hot * log_probs) / n_samples
         return loss
 
-    def fit(self, X, y, 
-            X_val=None, y_val=None, 
-            X_test=None, y_test=None):
+    def fit(self, X, y):
         """
         Trains the Softmax Regression model via batch gradient descent.
-        Optionally tracks validation/test loss if provided.
-
+        
         Args:
             X (ndarray): Training data of shape (n_samples, n_features).
             y (ndarray): True labels of shape (n_samples,).
-            X_val, y_val (ndarray, optional): Validation data for monitoring.
-            X_test, y_test (ndarray, optional): Test data for monitoring.
         """
         start_time = time.time()
 
