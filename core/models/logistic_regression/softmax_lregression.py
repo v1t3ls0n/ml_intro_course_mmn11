@@ -105,6 +105,8 @@ class SoftmaxRegression:
             dW = (probs - y_one_hot).T @ X  # shape: (num_classes, n_features)
             dW /= n_samples
             self.weights -= self.learning_rate * dW
+            gradient_norm = np.linalg.norm(dW)
+            self.learning_rate = self.learning_rate / (1 + gradient_norm)  # Adaptive learning rate
 
             if (iteration + 1) % 10 == 0:
                 logger.info(f"Iter {iteration+1}/{self.max_iter}, Loss: {train_loss:.4f}")
