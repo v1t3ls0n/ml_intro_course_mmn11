@@ -82,8 +82,9 @@ class LinearRegression:
 
         # Initialize weights if not already set
         if self.weights is None:
-            # small random initialization
-            self.weights = np.random.randn(self.num_classes, d_features) * 0.01
+            delta = np.sqrt(1 / d_features)  # Small value for initialization
+            self.weights = np.random.standard_normal((self.num_classes, d_features))  * delta # Optional: standard normal initialization
+
 
         # Initialize gradient accumulator for AdaGrad if adaptive learning rate is enabled
         if self.adaptive_lr and self.G is None:
