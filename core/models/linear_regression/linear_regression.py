@@ -36,7 +36,7 @@ class LinearRegression:
         self.tol = tol
         self.patience = patience
 
-        # Weights will be shape (num_classes, n_features)
+        # Weights will be shape (num_classes, d_features)
         self.weights = None  
 
         # We'll store losses by class
@@ -78,12 +78,12 @@ class LinearRegression:
 
         # One-hot encode the labels
         y_one_hot = self._one_hot_encode(y)
-        n_samples, n_features = X.shape
+        n_samples, d_features = X.shape
 
         # Initialize weights if not already set
         if self.weights is None:
             # small random initialization
-            self.weights = np.random.randn(self.num_classes, n_features) * 0.01
+            self.weights = np.random.randn(self.num_classes, d_features) * 0.01
 
         # Initialize gradient accumulator for AdaGrad if adaptive learning rate is enabled
         if self.adaptive_lr and self.G is None:

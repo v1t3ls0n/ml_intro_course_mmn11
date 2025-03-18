@@ -43,7 +43,7 @@ class SoftmaxRegression:
         self.patience = patience
 
         # Weight matrix (initialized in fit)
-        self.weights = None  # shape: (num_classes, n_features)
+        self.weights = None  # shape: (num_classes, d_features)
 
         # Store training/test losses by class
         self.loss_history = {
@@ -91,16 +91,20 @@ class SoftmaxRegression:
         If early_stopping is enabled, training stops when progress in loss improvement is too small.
         Optionally computes test loss if X_test and y_test are provided.
         """
-        import time
         start_time = time.time()
 
         # One-hot encode labels
         y_one_hot = self._one_hot_encode(y)
-        n_samples, n_features = X.shape
+        n_samples, d_features = X.shape
 
         # Improved weight initialization: small random values (e.g., from a normal distribution)
         if self.weights is None:
-            self.weights = np.random.randn(self.num_classes, n_features) * 0.01
+            delta = np.sqrt(1 / d_features)  # Small value for initialization
+            self.weights = np.random.standard_normal(self.num_classes, d_features)  * delta # Optional: standard normal initialization
+
+            # old initialization method
+            # self.weights = np.random.randn(self.num_classes, d_features) * 0.01 # Optional: small random initialization
+
 
         # Initialize gradient accumulator for AdaGrad if adaptive learning rate is enabled
         if self.adaptive_lr:
@@ -188,7 +192,7 @@ class SoftmaxRegression:
             self.iter_logs.append(iteration_data)
 
             # Logging every 100 iterations
-            if (iteration + 1) % 100 == 0:
+            if iteration % 10 == 0:
                 if self.adaptive_lr:
                     logger.info(
                         f"Iter {iteration+1}/{self.max_iter}, "
