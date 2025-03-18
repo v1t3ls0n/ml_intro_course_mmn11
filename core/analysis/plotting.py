@@ -44,20 +44,27 @@ def plot_error_curves(train_curve, test_curve, title, save_path=None,
 def plot_accuracy_vs_max_iter(
     max_iter_values,
     accuracies_clean,
-    accuracies_pocket,
+    accuracies_pocket=None,
     accuracies_softmax=None,
     save_path=None
 ):
     """
     Plots accuracy vs. max_iter for up to three models:
       - Clean PLA
-      - Pocket PLA
-      - Softmax (optional)
+      - (optional) Pocket PLA
+      - (optional) Softmax
+    If 'accuracies_pocket' or 'accuracies_softmax' is None, that line is skipped.
     """
     plt.figure(figsize=(8, 5))
-    plt.plot(max_iter_values, accuracies_clean, marker='o', label='Clean PLA')
-    plt.plot(max_iter_values, accuracies_pocket, marker='s', label='Pocket PLA')
 
+    # Clean line
+    plt.plot(max_iter_values, accuracies_clean, marker='o', label='Clean PLA')
+
+    # Pocket line if provided
+    if accuracies_pocket is not None:
+        plt.plot(max_iter_values, accuracies_pocket, marker='s', label='Pocket PLA')
+
+    # Softmax line if provided
     if accuracies_softmax is not None:
         plt.plot(max_iter_values, accuracies_softmax, marker='^', label='Softmax')
 
@@ -75,20 +82,27 @@ def plot_accuracy_vs_max_iter(
 def plot_runtime_vs_max_iter(
     max_iter_values,
     runtimes_clean,
-    runtimes_pocket,
+    runtimes_pocket=None,
     runtimes_softmax=None,
     save_path=None
 ):
     """
     Plots runtime vs. max_iter for up to three models:
       - Clean PLA
-      - Pocket PLA
-      - Softmax (optional)
+      - (optional) Pocket PLA
+      - (optional) Softmax
+    If 'runtimes_pocket' or 'runtimes_softmax' is None, that line is skipped.
     """
     plt.figure(figsize=(8, 5))
-    plt.plot(max_iter_values, runtimes_clean, marker='o', label='Clean PLA')
-    plt.plot(max_iter_values, runtimes_pocket, marker='s', label='Pocket PLA')
 
+    # Clean line
+    plt.plot(max_iter_values, runtimes_clean, marker='o', label='Clean PLA')
+
+    # Pocket line if provided
+    if runtimes_pocket is not None:
+        plt.plot(max_iter_values, runtimes_pocket, marker='s', label='Pocket PLA')
+
+    # Softmax line if provided
     if runtimes_softmax is not None:
         plt.plot(max_iter_values, runtimes_softmax, marker='^', label='Softmax')
 
@@ -115,12 +129,15 @@ def plot_performance_summary_extended(
     Plots a comprehensive summary of performance metrics across different max_iter values.
     Includes: Accuracy, Sensitivity (TPR), Selectivity (TNR), and Runtime.
     Supports up to three models: Clean PLA, Pocket PLA, and optional Softmax.
+    If any of the optional arrays are None, that line is skipped.
     """
     fig, axes = plt.subplots(4, 1, figsize=(10, 16))
 
-    # Accuracy
-    axes[0].plot(max_iter_values, np.array(accuracies_clean)*100, marker='o', label='Clean PLA')
-    axes[0].plot(max_iter_values, np.array(accuracies_pocket)*100, marker='s', label='Pocket PLA')
+    # 1) Accuracy
+    if accuracies_clean is not None:
+        axes[0].plot(max_iter_values, np.array(accuracies_clean)*100, marker='o', label='Clean PLA')
+    if accuracies_pocket is not None:
+        axes[0].plot(max_iter_values, np.array(accuracies_pocket)*100, marker='s', label='Pocket PLA')
     if accuracies_softmax is not None:
         axes[0].plot(max_iter_values, np.array(accuracies_softmax)*100, marker='^', label='Softmax')
     axes[0].set_ylabel("Accuracy (%)")
@@ -128,9 +145,11 @@ def plot_performance_summary_extended(
     axes[0].grid(True, linestyle='--', alpha=0.7)
     axes[0].legend()
 
-    # Sensitivity
-    axes[1].plot(max_iter_values, np.array(sensitivities_clean)*100, marker='o', label='Clean PLA')
-    axes[1].plot(max_iter_values, np.array(sensitivities_pocket)*100, marker='s', label='Pocket PLA')
+    # 2) Sensitivity (TPR)
+    if sensitivities_clean is not None:
+        axes[1].plot(max_iter_values, np.array(sensitivities_clean)*100, marker='o', label='Clean PLA')
+    if sensitivities_pocket is not None:
+        axes[1].plot(max_iter_values, np.array(sensitivities_pocket)*100, marker='s', label='Pocket PLA')
     if sensitivities_softmax is not None:
         axes[1].plot(max_iter_values, np.array(sensitivities_softmax)*100, marker='^', label='Softmax')
     axes[1].set_ylabel("Sensitivity (TPR) (%)")
@@ -138,9 +157,11 @@ def plot_performance_summary_extended(
     axes[1].grid(True, linestyle='--', alpha=0.7)
     axes[1].legend()
 
-    # Selectivity
-    axes[2].plot(max_iter_values, np.array(selectivities_clean)*100, marker='o', label='Clean PLA')
-    axes[2].plot(max_iter_values, np.array(selectivities_pocket)*100, marker='s', label='Pocket PLA')
+    # 3) Selectivity (TNR)
+    if selectivities_clean is not None:
+        axes[2].plot(max_iter_values, np.array(selectivities_clean)*100, marker='o', label='Clean PLA')
+    if selectivities_pocket is not None:
+        axes[2].plot(max_iter_values, np.array(selectivities_pocket)*100, marker='s', label='Pocket PLA')
     if selectivities_softmax is not None:
         axes[2].plot(max_iter_values, np.array(selectivities_softmax)*100, marker='^', label='Softmax')
     axes[2].set_ylabel("Selectivity (TNR) (%)")
@@ -148,9 +169,11 @@ def plot_performance_summary_extended(
     axes[2].grid(True, linestyle='--', alpha=0.7)
     axes[2].legend()
 
-    # Runtime
-    axes[3].plot(max_iter_values, runtimes_clean, marker='o', label='Clean PLA')
-    axes[3].plot(max_iter_values, runtimes_pocket, marker='s', label='Pocket PLA')
+    # 4) Runtime
+    if runtimes_clean is not None:
+        axes[3].plot(max_iter_values, runtimes_clean, marker='o', label='Clean PLA')
+    if runtimes_pocket is not None:
+        axes[3].plot(max_iter_values, runtimes_pocket, marker='s', label='Pocket PLA')
     if runtimes_softmax is not None:
         axes[3].plot(max_iter_values, runtimes_softmax, marker='^', label='Softmax')
     axes[3].set_ylabel("Runtime (s)")
@@ -167,8 +190,6 @@ def plot_performance_summary_extended(
     plt.show()
 
 
-# =========== NEW/ADDITIONAL FUNCTIONS ===========
-
 def plot_train_curves_three_models(
     clean_train_curve=None,
     pocket_train_curve=None,
@@ -179,6 +200,7 @@ def plot_train_curves_three_models(
 ):
     """
     Plots up to three aggregated training-loss curves (Clean, Pocket, Softmax).
+    If any curve is None, it is skipped.
     """
     plt.figure(figsize=(8, 5))
 
@@ -195,6 +217,7 @@ def plot_train_curves_three_models(
     plt.title(full_title)
     plt.legend()
     plt.grid(True, linestyle='--', alpha=0.7)
+
     if save_path:
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
@@ -221,10 +244,6 @@ def plot_metric_vs_learning_rate(learning_rates, metric_values, metric_name="Acc
         plt.savefig(save_path, dpi=300, bbox_inches='tight')
     plt.show()
 
-
-#
-# ---------- NEW: 4-Model Plotting Functions (Optional) -----------
-#
 
 def plot_accuracy_vs_max_iter_4models(
     max_iter_values,
